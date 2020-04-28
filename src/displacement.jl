@@ -1,4 +1,3 @@
-import Distributions: quantile, minimum, maximum, pdf, cdf, @check_args
 mutable struct Diffusion{T <: Real} <: ContinuousUnivariateDistribution
     D::T
     δ::T

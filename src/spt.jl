@@ -13,6 +13,7 @@ using Statistics
 
 import Random: AbstractRNG, GLOBAL_RNG
 import StatsBase: sem
+import Distributions: quantile, minimum, maximum, pdf, cdf, @check_args
 
 # exportしたい関数一覧
 export
