@@ -18,7 +18,7 @@ Uploading the codes started in April 27th, 2020.
 * 隠れマルコフモデルに基づいた拡散状態の推定(EMアルゴリズム，Baum Welchアルゴリズムと多分将来的には変分ベイズも...)．
 * リサンプリング法やsingle-pixel interior filling関数に基づいた座標誤差の修正．
 
-コードのアップロードなどは2020/04/27から開始しました．
+コードのアップロードなどは2020/04/27から開始しました．  
 随時アップしていきます．
 
 ## Introduction
