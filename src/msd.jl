@@ -44,8 +44,11 @@ function average_msd(df::DataFrame)
     msd
 end
 
-function mean_square_disaplcement(df::DataFrame)
-    tmp = pre_calculation(df)
+function mean_square_disaplcement(df::DataFrame, ; time_average=false)
+    if time_average
+        tmp = pre_calculation(df)
+    else
+        tmp = pre_calculation(df, time_average=true)
     return average_msd(tmp), tmp
 end
 
