@@ -1,35 +1,26 @@
-function _pre_calculation(df::DataFrame)
-    #= 
-    BenchmarkTools.Trial: 
-  memory estimate:  525.38 MiB
-  allocs estimate:  11288180
-  --------------
-  minimum time:     1.728 s (1.97% GC)
-  median time:      1.801 s (2.91% GC)
-  mean time:        1.843 s (2.57% GC)
-  maximum time:     1.999 s (2.62% GC)
-  --------------
-  samples:          3
-  evals/sample:     1 =#
+function pre_calculation(df::DataFrame, ; time_average::Bool = false)
     tmp_msd = DataFrame(
-        TrackID = Int64[], MSD = Float64[], Δt = Int64[], n = Int64[]
-    )
-    @inbounds @simd for id in sort(collect(Set(df.TrackID)))
+        TrackID = Int64[], msd = Float64[], delta_t = Int64[], n = Int64[]
+        )
+    @inbounds for id in sort(collect(Set(df.TrackID)))
         tmp_df = convert(Matrix, df[df.TrackID .== id, [:POSITION_X, :POSITION_Y]])
         track_length = size(tmp_df, 1)
-        for Δt in 1:track_length - 1
+        for delta_t in 1:track_length - 1
             start = 1
             cumsum = 0.0
             n = 0
-            while start + Δt <= track_length
-                cumsum += norm(tmp_df[start + Δt,:] - tmp_df[start,:])^2
+            while start + delta_t <= track_length
+                cumsum += norm(tmp_df[start + delta_t,:] - tmp_df[start,:])^2
                 start += 1
                 n += 1
+                if time_average
+                    break
+                end
             end
             cumsum /= n
             push!(
                 tmp_msd, [
-                    id, cumsum, Δt, n
+                    id, cumsum, delta_t, n
                 ]
             )
         end
@@ -37,16 +28,16 @@ function _pre_calculation(df::DataFrame)
     tmp_msd
 end
 
-function _average_msd(df::DataFrame)
+function average_msd(df::DataFrame)
     msd = DataFrame(
-            Δt = Float64[], MSD = Float64[], n = Int64[], std = Float64[], sem = Float64[]
+            delta_t = Float64[], msd = Float64[], n = Int64[], std = Float64[], sem = Float64[]
         )
-    @inbounds @simd for i in 1:maximum(tmp_msd.Δt)
-        total_n = sum(df[df.Δt .== i, :n])
-        tmp = df[df.Δt .== i, :]
+    @inbounds @simd for i in 1:maximum(df.delta_t)
+        total_n = sum(df[df.delta_t .== i, :n])
+        tmp_msd = df[df.delta_t .== i, :msd]
         push!(
             msd,[
-                i * 1 / 45, mean(tmp.MSD), total_n, std(tmp.MSD), sem(tmp.MSD)
+                i * 1 / 45, mean(tmp_msd), total_n, std(tmp_msd), sem(tmp_msd)
             ]
         )
     end
@@ -54,13 +45,13 @@ function _average_msd(df::DataFrame)
 end
 
 function mean_square_disaplcement(df::DataFrame)
-    tmp = _pre_calculation(df)
-    _average_msd(tmp)
+    tmp = pre_calculation(df)
+    return average_msd(tmp), tmp
 end
 
-function fit_msd(df, ;max_time::Int64 = 10)
+function fit_msd(df, ;max_time::Int64 = 10, loc_error::Float64 = 0.03, p0 = [1.0, 1.0])
     @. model(x, p) = 4 * p[1] * x^p[2] + 4 * 0.03^2
-    fit = curve_fit(model, df.Δt[1:max_time], df.MSD[1:max_time], [1.0, 1.0])
+    fit = curve_fit(model, df.delta_t[1:max_time], df.msd[1:max_time], p0)
     D, α = fit.param
     return D, α
 end
