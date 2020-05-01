@@ -1,6 +1,6 @@
 function data2matrix(
-        df::DataFrame, track_num::Int64, max_length::Int64,
-        track_length::AbstractArray, K::Int64, start_point::AbstractArray,
+        df::DataFrame, track_num::Integer, max_length::Integer,
+        track_length::AbstractArray, K::Integer, start_point::AbstractArray,
     )
     data = zeros(Float64, (max_length, K, track_num))
     for i in 1:track_num
@@ -11,7 +11,7 @@ function data2matrix(
     data
 end
 
-function create_prior(K::Int64, dt::Float64, df::DataFrames.DataFrame, error::Float64)
+function create_prior(K::Integer, dt::Float64, df::DataFrames.DataFrame, error::Float64)
     a::Array{Float64,1} = rand(Float64, K)
     a /= sum(a)
     A::Array{Float64,2} = rand(Float64, (K, K))
@@ -38,14 +38,14 @@ function likelihood!(dR, D, L, dt, error)
 end
 
 function rand(
-        rng::AbstractRNG, hmm::AbstractHMM{Univariate}, 
+        rng::AbstractRNG, hmm::AbstractHMM{Univariate},
         z::AbstractArray{<:Integer}, T::Integer,
         N::Integer;
     )
     y = Array{Float64}(undef, size(z, 1), size(z, 2))
     for n in 1:N
         for t in 1:T
-            y[t, n] = rand(rng, hmm.B[z[t]])
+            y[t, n] = rand(rng, hmm.B[z[t, n]])
         end
     end
     y
@@ -69,3 +69,9 @@ function rand(
     y = rand(rng, hmm, z, T, N)
     seq ? (z, y) : y
 end
+
+rand(hmm::AbstractHMM, T::Integer, N::Integer; kwargs...) =
+    rand(GLOBAL_RNG, hmm, T, N; kwargs...)
+
+rand(hmm::AbstractHMM, z::AbstractArray{<:Integer}) =
+    rand(GLOBAL_RNG, hmm, size(z, 1), size(z, 2))
