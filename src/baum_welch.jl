@@ -57,7 +57,7 @@ function rand(
         T::Integer,
         N::Integer;
         init = rand(rng, Categorical(hmm.a), N),
-        seq = false,
+        seq = true,
     )
     z = Matrix{Int}(undef, T, N)
     for n = 1:N
