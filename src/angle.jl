@@ -18,7 +18,7 @@ function moving_angle(
     return theta
 end
 
-# Naive implemation is 2times faster than ifelse function
+# Naive implemation is 2times faster than using ifelse function
 function spiff(
         x::AbstractArray,
         y::AbstractArray
