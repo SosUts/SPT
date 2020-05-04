@@ -18,6 +18,7 @@ function moving_angle(
     return theta
 end
 
+# Naive implemation is 2times faster than ifelse function
 function spiff(
         x::AbstractArray,
         y::AbstractArray
@@ -25,44 +26,53 @@ function spiff(
     @argcheck length(x) == length(y)
     total_len = length(x)
 
-    spiff_x = [modf(i)[1] for i in x]
-    spiff_x_ceil = [modf(i)[2] for i in x]
-    spiff_y = [modf(i)[1] for i in y]
-    spiff_y_ceil = [modf(i)[2] for i in y]
+    frac_x = [modf(i)[1] for i in x]
+    int_x = [modf(i)[2] for i in x]
+    frac_y = [modf(i)[1] for i in y]
+    int_y = [modf(i)[2] for i in y]
 
-    x_plus = sort(spiff_x[spiff_x .>= 0.5])
-    x_minus = sort(spiff_x[spiff_x .< 0.5])
-    y_plus = sort(spiff_y[spiff_y .>= 0.5])
-    y_minus = sort(spiff_y[spiff_y .< 0.5])
+    x_plus = sort(frac_x[frac_x .>= 0.5])
+    x_minus = sort(frac_x[frac_x .< 0.5])
+    y_plus = sort(frac_y[frac_y .>= 0.5])
+    y_minus = sort(frac_y[frac_y .< 0.5])
 
-    len_x_plus, len_x_minus = length(x_plus), length(x_minus)
-    len_y_plus, len_y_minus = length(y_plus), length(y_minus)
+    x_plus_len, x_minus_len = length(x_plus), length(x_minus)
+    y_plus_len, y_minus_len = length(y_plus), length(y_minus)
 
-    corrected_x = zero(spiff_x)
-    corrected_y = zero(spiff_y)
+    corrected_x = zero(frac_x)
+    corrected_y = zero(frac_y)
+
     @inbounds for i in 1:total_len
-        if spiff_x[i] == 0
+        if frac_x[i] == 0
             continue
         end
-        x1_curr = x[i]
-        y1_curr = y[i]
-        spiff_x_curr = spiff_x[i]
-        spiff_y_curr = spiff_y[i]
-        if spiff_x_curr >= 0.5
-            tmp = sum(x_plus .<= spiff_x_curr)/len_x_plus
-            corrected_x[i] = ceil(x1_curr) + tmp/2
-        else
-            tmp = sum((x_minus) .> (spiff_x_curr))/len_x_minus
-            corrected_x[i] = ceil(x1_curr) - tmp/2
+        if frac_y[i] == 0
+            continue
         end
-        if spiff_y_curr >= 0.5
-            tmp = sum(y_plus .<= spiff_y_curr)/len_y_plus
-            corrected_y[i] = ceil(y1_curr) + tmp/2
+#         corrected_x[i] = ifelse(
+#             frac_x[i] >= 0.5,
+#             int_x[i] + (sum(x_plus .<= frac_x[i])/x_plus_len)/2,
+#             int_x[i] - (sum(x_minus .> frac_x[i])/x_minus_len)/2
+#         )
+#          corrected_y[i] = ifelse(
+#             frac_x[i] >= 0.5,
+#             int_y[i] + (sum(y_plus .<= frac_y[i])/y_plus_len)/2,
+#             int_y[i] - (sum(y_minus .> frac_y[i])/y_minus_len)/2
+#         )
+        if frac_x[i] >= 0.5
+            tmp = sum(x_plus .<= frac_x[i])/x_plus_len
+            corrected_x[i] = int_x[i] + tmp/2
         else
-            tmp = sum((y_minus) .> (spiff_y_curr))/len_y_minus
-            corrected_y[i] = ceil(y1_curr) - tmp/2
+            tmp = sum((x_minus) .> (frac_x[i]))/x_minus_len
+            corrected_x[i] = int_x[i] - tmp/2
+        end
+        if frac_y[i] >= 0.5
+            tmp = sum(y_plus .<= frac_y[i])/y_plus_len
+            corrected_y[i] = int_y[i] + tmp/2
+        else
+            tmp = sum((y_minus) .> (frac_y[i]))/y_minus_len
+            corrected_y[i] = int_y[i] - tmp/2
         end
     end
-
     return corrected_x, corrected_y
 end
