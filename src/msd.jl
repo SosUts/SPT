@@ -49,12 +49,13 @@ function mean_square_disaplcement(df::DataFrame, ; time_average=false)
         tmp = pre_calculation(df)
     else
         tmp = pre_calculation(df, time_average=true)
+    end
     return average_msd(tmp), tmp
 end
 
 function fit_msd(df, ;max_time::Int64 = 10, loc_error::Float64 = 0.03, p0 = [1.0, 1.0])
     @. model(x, p) = 4 * p[1] * x^p[2] + 4 * 0.03^2
     fit = curve_fit(model, df.delta_t[1:max_time], df.msd[1:max_time], p0)
-    D, α = fit.param
-    return D, α
+    D, ? = fit.param
+    return D, ?
 end
