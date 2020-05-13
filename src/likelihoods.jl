@@ -20,7 +20,7 @@ function likelihood!(
     end
 end
 
-function likelihood!(
+function loglikelihood!(
     obserbations::AbstractArray,
     d,
     L::AbstractArray
