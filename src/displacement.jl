@@ -1,28 +1,32 @@
-mutable struct Diffusion{T<:Real} <: ContinuousUnivariateDistribution
-    D::T
-    δ::T
-    ϵ::T
-    Diffusion{T}(D::T, δ::T, ϵ::T) where {T <: Real} = new{T}(D, δ, ϵ)
+import Distributions:@distr_support, minimum, maximum, pdf, cdf, quantile, logpdf, rand
+struct Diffusion{T1<:Real,T2<:Real,T3<:Real} <: ContinuousUnivariateDistribution
+    D::T1
+    δ::T2
+    ϵ::T3
+    Diffusion{T1,T2,T3}(D::T1, δ::T2, ϵ::T3) where {T1<:Real,T2<:Real,T3<:Real} = new{T1,T2,T3}(D, δ, ϵ)
 end
 
-function Diffusion(D::T, δ::T, ϵ; check_args = true) where {T <: Real}
+function Diffusion(D::T1, δ::T2, ϵ::T3; check_args = true) where {T1<:Real,T2<:Real,T3<:Real}
     check_args && Distributions.@check_args(
         Diffusion, D > zero(D) && δ > zero(δ) && ϵ >= zero(ϵ)
     )
-    return Diffusion{T}(D, δ, ϵ)
+    return Diffusion{T1,T2,T3}(D, δ, ϵ)
+#     return Beta{T}(α, β)
 end
 
 Distributions.@distr_support Diffusion 0 +Inf
 
 Distributions.minimum(d::Diffusion) = 0.0
 Distributions.maximum(d::Diffusion) = +Inf
-Distributions.cdf(d::Diffusion, x::Real) where T <: Real =
+Distributions.cdf(d::Diffusion, x::Real) =
     1 - exp(-x^2 / 4(d.D * d.δ + d.ϵ^2))
 Distributions.quantile(d::Diffusion, p) = sqrt(-4(d.D * d.δ + d.ϵ^2) * log(1 - p))
-Distributions.pdf(d::Diffusion, x::Float64) where T <: Real =
-    0 ≤ x ? x / 2(d.D * d.δ + d.ϵ^2) * exp(-x^2 / 4(d.D * d.δ + d.ϵ^2)) : zero(T)
-Distributions.logpdf(d::Diffusion, x::AbstractVector{<:Real}) where T <: Real = 
-    0 ≤ x ? log(x) - log(2(d.D * d.δ + d.ϵ^2)) - x^2 / (4(d.D * d.δ + d.ϵ^2)) : zero(T)
+Distributions.pdf(d::Diffusion, x::Float64) =
+    0 ≤ x ? x / 2(d.D * d.δ + d.ϵ^2) * exp(-x^2 / 4(d.D * d.δ + d.ϵ^2)) : zero(x)
+Distributions.logpdf(d::Diffusion, x::AbstractVector{<:Real}) =
+    0 ≤ x ? log(x) - log(2(d.D * d.δ + d.ϵ^2)) - (x^2 / (4(d.D * d.δ + d.ϵ^2))) : zero(x)
+# Distributions.pdf(d::Diffusion, x::AbstractArray{<:Real}) =
+#     0 ≤ x ? x / 2(d.D * d.δ + d.ϵ^2) * exp(-x^2 / 4(d.D * d.δ + d.ϵ^2)) : zero(x)
 Distributions.quantile(d::Diffusion, x::AbstractVector{<:Real}) = sqrt(-4(d.D * d.δ + d.ϵ^2) * log(1 - x))
 Distributions.rand(d::Diffusion, rng::AbstractVector{<:Real}) =
     Distributions.quantile(d::Diffusion, rng)
