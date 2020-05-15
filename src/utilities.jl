@@ -1,3 +1,15 @@
+
+
+function preproccsing!(df::DataFrames.DataFrame)
+    df[!, :dX] .= 0.0
+    df[!, :dY] .= 0.0
+    df.dX[2:end] .= diff(df.spiff_x);
+    df.dY[2:end] .= diff(df.spiff_y);
+    df[df.FRAME.== 0, [:dX, :dY]] .= NaN
+    df.dR2 = abs2.(df.dX) + abs2.(df.dY);
+    df.dR = sqrt.(df.dR2);
+end
+
 function data2matrix(
         df::DataFrame, track_num::Integer, max_length::Integer,
         track_length::AbstractArray, K::Integer, start_point::AbstractArray,
@@ -11,7 +23,11 @@ function data2matrix(
     data
 end
 
-function create_prior(K::Integer, dt::Float64, df::DataFrames.DataFrame, error::Float64)
+function create_prior(
+    K::Integer,
+    dt::Float64,
+    df::DataFrames.DataFrame,
+    error::Float64)
     a::Array{Float64,1} = rand(Float64, K)
     a /= sum(a)
     A::Array{Float64,2} = rand(Float64, (K, K))
