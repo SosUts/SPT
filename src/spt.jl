@@ -43,7 +43,7 @@ include("displacement.jl")
 include("mle.jl")
 include("msd.jl")
 include("messages.jl")
-include("viterbi_api.jl")
+# include("viterbi_api.jl")
 include("likelihoods.jl")
 include("utilities.jl")
 
