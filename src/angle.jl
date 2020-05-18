@@ -12,7 +12,7 @@ function moving_angle(
         x::AbstractVector,
         y::AbstractVector
     )
-    cos_theta = (x ⋅ y) / (norm(x)*norm(y))
+    cos_theta = (x ? y) / (norm(x)*norm(y))
     theta = rad2deg(acos(cos_theta))
     theta = ifelse(twod_cross(x,y)<0, -theta, theta)
     return theta
