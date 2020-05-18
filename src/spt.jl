@@ -28,6 +28,8 @@ export
     backward!,
     posterior!,
     update_ξ!,
+    # mle.jl
+    fit_baumwelch,
     # likelihoods.jl
     likelihood!,
     loglikelihood!,
