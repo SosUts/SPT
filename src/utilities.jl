@@ -5,9 +5,19 @@ function preproccsing!(df::DataFrames.DataFrame)
     df[!, :dY] .= 0.0
     df.dX[2:end] .= diff(df.spiff_x)
     df.dY[2:end] .= diff(df.spiff_y)
-    df[df.FRAME.==0, [:dX, :dY]] .= NaN
+    df[df.FRAME.== 0, [:dX, :dY]] .= NaN
     df.dR2 = abs2.(df.dX) + abs2.(df.dY)
     df.dR = sqrt.(df.dR2)
+
+    startpoint = findall(x->x==0, df.FRAME)
+    endpoint = startpoint[2:end] .- 2
+    terminus = size(df)[1] - 1
+    endpoint = append!(endpoint, terminus)
+    track_length = endpoint .- startpoint
+    track_num = maximum(df.TrackID)
+    max_length = maximum(df.FRAME)
+
+    return track_length, track_num, max_length
 end
 
 function data2matrix(
