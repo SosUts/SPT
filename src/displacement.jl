@@ -1,4 +1,3 @@
-import Distributions:@distr_support, minimum, maximum, pdf, cdf, quantile, logpdf, rand
 struct Diffusion{T1<:Real,T2<:Real,T3<:Real} <: ContinuousUnivariateDistribution
     D::T1
     δ::T2
