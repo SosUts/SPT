@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 # LinearAlgebra.cross couldn't be applied to 2d vector
 function twod_cross(x::AbstractVector, y::AbstractVector)
     x[1] * y[2] - x[2] * y[1]
