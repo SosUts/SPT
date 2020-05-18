@@ -1,11 +1,13 @@
 function rand(
-        rng::AbstractRNG, hmm::AbstractHMM{Univariate},
-        z::AbstractArray{<:Integer}, T::Integer,
-        N::Integer;
-    )
+    rng::AbstractRNG,
+    hmm::AbstractHMM{Univariate},
+    z::AbstractArray{<:Integer},
+    T::Integer,
+    N::Integer;,
+)
     y = Array{Float64}(undef, size(z, 1), size(z, 2))
-    for n in 1:N
-        for t in 1:T
+    for n = 1:N
+        for t = 1:T
             y[t, n] = rand(rng, hmm.B[z[t, n]])
         end
     end
@@ -13,13 +15,13 @@ function rand(
 end
 
 function rand(
-        rng::AbstractRNG,
-        hmm::AbstractHMM,
-        T::Integer,
-        N::Integer;
-        init = rand(rng, Categorical(hmm.a), N),
-        seq = true,
-    )
+    rng::AbstractRNG,
+    hmm::AbstractHMM,
+    T::Integer,
+    N::Integer;
+    init = rand(rng, Categorical(hmm.a), N),
+    seq = true,
+)
     z = Matrix{Int}(undef, T, N)
     for n = 1:N
         (T >= 1) && (N >= 1) && (z[1, n] = init[n])
