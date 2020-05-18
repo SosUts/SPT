@@ -1,23 +1,21 @@
-
-
 function preproccsing!(df::DataFrames.DataFrame)
     df[!, :dX] .= 0.0
     df[!, :dY] .= 0.0
-    df.dX[2:end] .= diff(df.spiff_x)
-    df.dY[2:end] .= diff(df.spiff_y)
+    df.dX[2:end] .= diff(df.corrected_x)
+    df.dY[2:end] .= diff(df.corrected_y)
     df[df.FRAME.==0, [:dX, :dY]] .= NaN
     df.dR2 = abs2.(df.dX) + abs2.(df.dY)
     df.dR = sqrt.(df.dR2)
 
-    startpoint = findall(x -> x == 0, df.FRAME)
-    endpoint = startpoint[2:end] .- 2
+    start_point = findall(x -> x == 1, df.New_Frame)
+    endpoint = start_point[2:end] .- 2
     terminus = size(df)[1] - 1
     endpoint = append!(endpoint, terminus)
-    track_length = endpoint .- startpoint
+    track_length = endpoint .- start_point
     track_num = maximum(df.TrackID)
-    max_length = maximum(df.FRAME)
+    max_length = maximum(df.New_Frame)
 
-    return track_length, track_num, max_length
+    return track_length, track_num, max_length, start_point
 end
 
 function data2matrix(
@@ -58,3 +56,46 @@ function create_prior(
 end
 
 nomapround(b, d) = (x -> round.(x, digits = d)).(b)
+
+
+# function rand(
+#     rng::AbstractRNG,
+#     hmm::AbstractHMM{Univariate},
+#     z::AbstractArray{<:Integer},
+#     T::Integer,
+#     N::Integer
+# )
+#     y = Array{Float64}(undef, size(z, 1), size(z, 2))
+#     for n = 1:N
+#         for t = 1:T
+#             y[t, n] = rand(rng, hmm.B[z[t, n]])
+#         end
+#     end
+#     y
+# end
+
+# function rand(
+#     rng::AbstractRNG,
+#     hmm::AbstractHMM,
+#     T::Integer,
+#     N::Integer;
+#     init = rand(rng, Categorical(hmm.a), N),
+#     seq = true,
+# )
+#     z = Matrix{Int}(undef, T, N)
+#     for n = 1:N
+#         (T >= 1) && (N >= 1) && (z[1, n] = init[n])
+#         for t = 2:T
+#             z[t, n] = rand(rng, Categorical(hmm.A[z[t-1, n], :]))
+#         end
+#     end
+#     y = rand(rng, hmm, z, T, N)
+#     seq ? (z, y) : y
+# end
+
+# rand(hmm::AbstractHMM, T::Integer, N::Integer; kwargs...) =
+#     rand(GLOBAL_RNG, hmm, T, N; kwargs...)
+
+# rand(hmm::AbstractHMM, z::AbstractArray{<:Integer}) =
+#     rand(GLOBAL_RNG, hmm, size(z, 1), size(z, 2))
+
