@@ -1,8 +1,8 @@
 function forward!(
         α::AbstractArray,
-        c::AbstractArray, 
+        c::AbstractArray,
         a::AbstractArray,
-        A::AbstractArray, 
+        A::AbstractArray,
         L::AbstractArray,
         i::Integer, track_length
     )
