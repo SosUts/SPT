@@ -3,7 +3,7 @@ function preproccsing!(df::DataFrames.DataFrame)
     df[!, :dY] .= 0.0
     df.dX[2:end] .= diff(df.corrected_x)
     df.dY[2:end] .= diff(df.corrected_y)
-    df[df.FRAME.==0, [:dX, :dY]] .= NaN
+    df[df.New_Frame.==1, [:dX, :dY]] .= NaN
     df.dR2 = abs2.(df.dX) + abs2.(df.dY)
     df.dR = sqrt.(df.dR2)
 
