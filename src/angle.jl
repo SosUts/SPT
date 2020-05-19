@@ -7,6 +7,10 @@ end
 function moving_angle(x::AbstractVector, y::AbstractVector)
     @argcheck length(x) == length(y) == 2
     cos_theta = dot(x, y) / (norm(x) * norm(y))
+    cos_theta = round(cos_theta, digits=6)
+    # if cos_theta > 1.0
+    #     println(x, y)
+    # end
     theta = rad2deg(acos(cos_theta))
     theta = ifelse(twod_cross(x, y) < 0, -theta, theta)
     theta
