@@ -38,12 +38,12 @@ function spiff(x::AbstractArray, y::AbstractArray)
     corrected_y = zero(frac_y)
 
     @inbounds for i = 1:total_len
-        if frac_x[i] == 0
-            continue
-        end
-        if frac_y[i] == 0
-            continue
-        end
+        # if frac_x[i] == 0
+        #     continue
+        # end
+        # if frac_y[i] == 0
+        #     continue
+        # end
         #         corrected_x[i] = ifelse(
         #             frac_x[i] >= 0.5,
         #             int_x[i] + (sum(x_plus .<= frac_x[i])/x_plus_len)/2,
