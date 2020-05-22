@@ -1,14 +1,24 @@
 function pre_calculation(df::DataFrame, ; time_average::Bool = false)
-    tmp_msd = DataFrame(TrackID = Int64[], msd = Float64[], delta_t = Int64[], n = Int64[])
-    @inbounds for id in sort(collect(Set(df.TrackID)))
-        tmp_df = convert(Matrix, df[df.TrackID.==id, [:POSITION_X, :POSITION_Y]])
+    tmp_msd = DataFrame(
+        TrackID = Int64[], msd = Float64[], corrected_msd = Float64[],
+        delta_t = Int64[], n = Int64[]
+    )
+    @inbounds @fastmath for id in sort(collect(Set(df.TrackID)))
+        column_list = [
+            :POSITION_X, :POSITION_Y, :corrected_x, :corrected_y
+        ]
+        tmp_df = convert(Matrix, df[df.TrackID .== id, column_list])
         track_length = size(tmp_df, 1)
-        for delta_t = 1:track_length-1
+        @inbounds @fastmath for delta_t in 1:track_length - 1
             start = 1
             cumsum = 0.0
+            corrected_cumsum = 0.0
             n = 0
-            while start + delta_t <= track_length
-                cumsum += norm(tmp_df[start+delta_t, :] - tmp_df[start, :])^2
+            @inbounds @fastmath while start + delta_t <= track_length
+                cumsum +=
+                    norm(tmp_df[start + delta_t, 1:2] .- tmp_df[start, 1:2])^2
+                corrected_cumsum +=
+                    norm(tmp_df[start + delta_t, 3:4] .- tmp_df[start, 3:4])^2
                 start += 1
                 n += 1
                 if time_average
@@ -16,7 +26,12 @@ function pre_calculation(df::DataFrame, ; time_average::Bool = false)
                 end
             end
             cumsum /= n
-            push!(tmp_msd, [id, cumsum, delta_t, n])
+            corrected_cumsum /= n
+            push!(
+                tmp_msd, [
+                    id, cumsum, corrected_cumsum, delta_t, n
+                ]
+            )
         end
     end
     tmp_msd
