@@ -13,7 +13,7 @@ function preproccsing!(df::DataFrames.DataFrame)
     endpoint = append!(endpoint, terminus)
     track_length = endpoint .- start_point
     track_num = maximum(df.TrackID)
-    max_length = maximum(df.New_Frame)
+    max_length = Int64(maximum(df.New_Frame))
 
     return track_length, track_num, max_length, start_point
 end
