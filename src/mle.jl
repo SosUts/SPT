@@ -156,7 +156,7 @@ function fit_baumwelch(
     if iteration < maxiter
         println("EM converged in $iteration loops, ϵ = $ϵ")
         println("#---------------------#")
-        println("a = &a")
+        println("a = $a")
         println("D = $D")
         println("AIC = $aic")
         println("BIC = $bic")
