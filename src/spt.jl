@@ -23,6 +23,7 @@ export
     spiff,
     # msd.jl
     Diffusion,
+    mean_square_disaplcement,
     # messages.jl
     forward!,
     backward!,
