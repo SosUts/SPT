@@ -41,6 +41,7 @@ function average_msd(df::DataFrame)
     msd = DataFrame(
         delta_t = Float64[],
         msd = Float64[],
+        corrected_msd = Float64[],
         n = Int64[],
         std = Float64[],
         sem = Float64[],
@@ -48,7 +49,11 @@ function average_msd(df::DataFrame)
     @inbounds @simd for i = 1:maximum(df.delta_t)
         total_n = sum(df[df.delta_t.==i, :n])
         tmp_msd = df[df.delta_t.==i, :msd]
-        push!(msd, [i * 1 / 45, mean(tmp_msd), total_n, std(tmp_msd), sem(tmp_msd)])
+        tmp_corrected_msd = df[df.delta_t.==i, :corrected_msd]
+        push!(msd, [
+            i, mean(tmp_msd), mean(tmp_corrected_msd),
+            total_n, std(tmp_msd), sem(tmp_msd)
+        ])
     end
     msd
 end
