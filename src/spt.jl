@@ -26,7 +26,6 @@ export
     Diffusion,
     mean_square_disaplcement,
     plot_msd,
-    combine_msd_files,
     # messages.jl
     forward!,
     backward!,
@@ -41,7 +40,8 @@ export
     create_prior,
     preproccsing!,
     data2matrix,
-    nomapround
+    nomapround,
+    group_files
 
 # 読み込みたいjlファイル
 include("angle.jl")
