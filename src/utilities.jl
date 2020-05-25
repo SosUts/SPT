@@ -93,3 +93,21 @@ nomapround(b, d) = (x -> round.(x, digits = d)).(b)
 
 # rand(hmm::AbstractHMM, z::AbstractArray{<:Integer}) =
 #     rand(GLOBAL_RNG, hmm, size(z, 1), size(z, 2))
+
+function group_files(dir::AbstractString)
+    cd(dir)
+    genotypes = readdir()
+    filter!(isdir, genotypes)
+    df = []
+    for genotype in genotypes
+        files = glob("./$genotype/*.csv")
+        for file in files
+            tmp_df = CSV.read(file)
+            tmp_df[:, :Genotype] .= genotype
+            push!(df, tmp_df)
+        end
+    end
+    df = vcat(df...)
+    grouped_df = groupby(df, [:Genotype])
+    return grouped_df
+end

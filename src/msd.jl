@@ -75,25 +75,6 @@ function fit_msd(df, ; max_time::Int64 = 10, loc_error::Float64 = 0.03, p0 = [1.
     fit.param
 end
 
-
-function combine_msd_files(dir::AbstractString)
-    cd(dir)
-    genotypes = readdir()
-    filter!(isdir, genotypes)
-    df = []
-    for genotype in genotypes
-        files = glob("./$genotype/*.csv")
-        for file in files
-            tmp_df = CSV.read(file)
-            tmp_df[:, :Genotype] .= genotype
-            push!(df, tmp_df)
-        end
-    end
-    df = vcat(df...)
-    grouped_df = groupby(df, [:Genotype])
-    return grouped_df
-end
-
 function plot_msd(grouped_df; maxt = 10, savefig = false)
     maxt = 10
     for i = 1:length(grouped_df)
