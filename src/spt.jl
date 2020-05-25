@@ -24,6 +24,8 @@ export
     # msd.jl
     Diffusion,
     mean_square_disaplcement,
+    plot_msd,
+    combine_msd_files,
     # messages.jl
     forward!,
     backward!,
