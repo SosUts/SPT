@@ -35,12 +35,7 @@ function data2matrix(
     data
 end
 
-function create_prior(
-    df::DataFrames.DataFrame,
-    K::Integer,
-    dt::Float64,
-    error::Float64
-    )
+function create_prior(df::DataFrames.DataFrame, K::Integer, dt::Float64, error::Float64)
     a::Array{Float64,1} = rand(Float64, K)
     a /= sum(a)
     A::Array{Float64,2} = rand(Float64, (K, K))
@@ -98,4 +93,3 @@ nomapround(b, d) = (x -> round.(x, digits = d)).(b)
 
 # rand(hmm::AbstractHMM, z::AbstractArray{<:Integer}) =
 #     rand(GLOBAL_RNG, hmm, size(z, 1), size(z, 2))
-
