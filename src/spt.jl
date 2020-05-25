@@ -10,6 +10,7 @@ using LinearAlgebra
 using LsqFit
 using Plots
 using Statistics
+using Glob
 
 import Random: AbstractRNG, GLOBAL_RNG
 import StatsBase: sem
