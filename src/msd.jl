@@ -75,8 +75,7 @@ function fit_msd(df, ; max_time::Int64 = 10, loc_error::Float64 = 0.03, p0 = [1.
     fit.param
 end
 
-function plot_msd(grouped_df; maxt = 10, savefig = false)
-    maxt = 10
+function plot_msd(grouped_df; maxt = 10, save_fig = false)
     for i = 1:length(grouped_df)
         result = []
         tmp_df = grouped_df[i]
@@ -105,7 +104,7 @@ function plot_msd(grouped_df; maxt = 10, savefig = false)
     yticks(fontsize = 12)
 
     legend(bbox_to_anchor = (1.02, 1.0), loc = 2, borderaxespad = 0.0, fontsize = 14)
-    if savefig
+    if save_fig
         savefig("tamsd_dia0.25.png", bbox_inches = "tight", dpi = 800)
     end
 end

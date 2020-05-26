@@ -135,3 +135,38 @@ function calculate_fw_bw(data::AbstractArray)
     anisotropy = bw / fw
     return fw, bw, n, anisotropy
 end
+
+unction plot_anisotropy(grouped_df; maxt = 45, save_fig = false)
+    for i = 1:length(grouped_df)
+        result = []
+        tmp_df = grouped_df[i]
+        for t = 1:maxt
+            a = tmp_df[tmp_df.delta_t.==t, :]
+            push!(result, [t, mean(a.anisotropy), mean(a.std)])
+        end
+
+        result = reduce(vcat, result')
+        genotype = tmp_df[1, :Genotype]
+        plot(result[:, 1] * (1 / 45), result[:, 2], label = "$genotype")
+        fill_between(
+            result[:, 1] * (1 / 45),
+            result[:, 2] .- result[:, 3],
+            result[:, 2] .+ result[:, 3],
+            alpha = 0.2,
+        )
+    end
+    hlines([1], 0, 1, linestyle="--", color="k")
+
+    xlim(0, maxt*(1/45))
+    xlabel("Δt (sec)", fontsize = 14, family = "Arial")
+    xticks(fontsize = 12)
+
+    ylim(-1, )
+    ylabel("Anisotropy", fontsize = 14, family = "Arial")
+    yticks(fontsize = 12)
+
+    legend(bbox_to_anchor = (1.02, 1.0), loc = 2, borderaxespad = 0.0, fontsize = 14)
+    if save_fig
+        savefig("anisotropy_dia0.25.png", bbox_inches = "tight", dpi = 800)
+    end
+end
