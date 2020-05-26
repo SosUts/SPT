@@ -136,7 +136,7 @@ function calculate_fw_bw(data::AbstractArray)
     return fw, bw, n, anisotropy
 end
 
-unction plot_anisotropy(grouped_df; maxt = 45, save_fig = false)
+function plot_anisotropy(grouped_df; maxt = 45, save_fig = false)
     for i = 1:length(grouped_df)
         result = []
         tmp_df = grouped_df[i]
