@@ -71,3 +71,67 @@ function spiff(x::AbstractArray, y::AbstractArray)
     end
     return corrected_x, corrected_y
 end
+
+function anisotropy(
+        df::DataFrames.DataFrame;
+        maxt::Integer = 45,
+        localization_error::Float64 = 0.03,
+        num_of_resample = 50,
+    )
+    result = DataFrame(
+        delta_t = Real[],
+        cell_num = String[],
+        fw = Real[],
+        bw = Real[],
+        n = Integer[],
+        anisotropy = Float64[],
+        std = Float64[],
+        corrected_fw = Real[],
+        corrected_bw = Real[],
+        corrected_n = Integer[],
+        corrected_anisotropy = Float64[],
+        corrected_std = Float64[]
+    )
+    for t = 1:maxt
+        tmp_data = df[
+            (df.delta_t .== t) .& (df.dis_aft .>= localization_error) .& 
+            (df.dis_bfr .>= localization_error), :relative_angle]
+        tmp_data = convert(Array, tmp_data)
+        corrected_tmp_data = df[
+            (df.delta_t .== t) .& (df.corrected_dis_aft .>= localization_error) .&
+            (df.corrected_dis_bfr .>= localization_error), :corrected_angle]
+        corrected_tmp_data = convert(Array, corrected_tmp_data)
+        cell_num = df[1, :cell_num]
+
+        fw, bw, n, anisotropy = calculate_fw_bw(tmp_data)
+        corrected_fw, corrected_bw, corrected_n, corrected_anisotropy = 
+            calculate_fw_bw(corrected_tmp_data)
+
+        boot_std = []
+        corrected_boot_std = []
+        for _ in 1:num_of_resample
+            boot_df = tmp_data[
+                rand(1:length(tmp_data), div(length(tmp_data), 2))]
+            corrected_boot_df = corrected_tmp_data[
+                rand(1:length(corrected_tmp_data), div(length(corrected_tmp_data), 2))]
+            _, _, _, tmp_anisotropy = calculate_fw_bw(boot_df)
+            _, _, _, corrected_tmp_anisotropy = calculate_fw_bw(corrected_boot_df)
+            append!(boot_std, tmp_anisotropy)
+            append!(corrected_boot_std, corrected_tmp_anisotropy)
+        end
+
+        push!(result, [
+                t, cell_num, fw, bw, n, anisotropy, std(boot_std),
+                corrected_fw, corrected_bw, corrected_n, corrected_anisotropy, std(corrected_boot_std)
+                ])
+    end
+    return result
+end
+
+function calculate_fw_bw(data::AbstractArray)
+    fw = size(data[-30 .<= data .<= 30, :], 1)
+    bw = size(data[(150 .<= data) .|  (data .<= -150), :], 1)
+    n = fw + bw
+    anisotropy = bw / fw
+    return fw, bw, n, anisotropy
+end

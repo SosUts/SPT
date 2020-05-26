@@ -11,6 +11,7 @@ using LsqFit
 using Plots
 using Statistics
 using Glob
+using LaTeXStrings
 
 import Random: AbstractRNG, GLOBAL_RNG
 import StatsBase: sem
@@ -19,9 +20,9 @@ import Distributions: quantile, minimum, maximum, pdf, cdf, rand, logpdf, @check
 # exportしたい関数一覧
 export
     # angle.jl
-    twod_cross,
     moving_angle,
     spiff,
+    anisotropy,
     # msd.jl
     Diffusion,
     mean_square_disaplcement,
