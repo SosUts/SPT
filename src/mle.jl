@@ -4,7 +4,7 @@ function fit_baumwelch(
     tol = 1e-2,
     maxiter = 2000,
     dt::Float64 = 0.022,
-    error::Float64 = 0.03
+    er::Float64 = 0.03
     )
     result = DataFrame(
         iteration = Int64[],
@@ -25,7 +25,7 @@ function fit_baumwelch(
         K, start_point
         )
     T, K, N = size(observations)
-    a, A, D = create_prior(df, K, dt, error)
+    a, A, D = create_prior(df, K, dt, er)
 #     println(a, D)
     α = zeros(Float64, (T, K, N))
     β = zeros(Float64, (T, K, N))
@@ -44,8 +44,8 @@ function fit_baumwelch(
         fill!(c, 0.0)
         fill!(L, 0.0)
 
-        d = Diffusion.(D, dt, error)
-        likelihood!(observations, L, D, dt, error, track_length)
+        d = Diffusion.(D, dt, er)
+        likelihood!(observations, L, D, dt, er, track_length)
 
         @inbounds for i in 1:size(observations, 3)
             forward!(α, c, a, A, L, i, track_length)
@@ -57,14 +57,14 @@ function fit_baumwelch(
         D = reshape(
             sum(abs2.(observations) .* γ , dims=(1,3)) ./ (sum(γ, dims=(1,3)) .* (4dt)),
             K)
-        # D .-= error^2/dt
+        # D .-= er^2/dt
         println("D = $D")
         println(any(x -> x <= 0, D))
         if any(x -> x <= 0, D)
             println("D <= 0")
             for j in 1:K
                 if D[j] <= 0
-                    D[j] = example_mle(observations, D, γ_old, dt, error, t, j)
+                    D[j] = example_mle(observations, D, γ_old, dt, er, t, j)
                 end
             end
             break
@@ -100,19 +100,19 @@ function fit_baumwelch(
     return result, c, γ
 end
 
-function example_mle(observations, D, γ_old, dt, error, t, j)
+function example_mle(observations, D, γ_old, dt, er, t, j)
     #     n = 10^4
         n = length(filter(!iszero, observations[:, j, t]))
         Random.seed!(1234)
     #     dt = 0.022
-    #     error = 0.03
-    #     data = rand(Diffusion(0.001, dt, error), n);
+    #     er = 0.03
+    #     data = rand(Diffusion(0.001, dt, er), n);
         model = Model(Ipopt.Optimizer);
     #     set_silent(model)
         @variable(model, 10.0 >= D >= 0.0, start = 1.0);
         @NLobjective(model, Max, sum(γ_old[i, j, t] for i in 1:n) * 
-            (sum((log(observations[i, j, t]) for i in 1:n)) - n * log(2(dt*D+error^2)) -
-            (sum((observations[i, j, t])^2 for i in 1:n) / 4(dt*D + error^2)))
+            (sum((log(observations[i, j, t]) for i in 1:n)) - n * log(2(dt*D+er^2)) -
+            (sum((observations[i, j, t])^2 for i in 1:n) / 4(dt*D + er^2)))
         );
         JuMP.optimize!(model);
         JuMP.value(D);

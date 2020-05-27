@@ -1,5 +1,5 @@
-function _likelihood!(dR, D, L, dt, error)
-    d = Diffusion.(D, dt, error)
+function _likelihood!(dR, D, L, dt, er)
+    d = Diffusion.(D, dt, er)
     @inbounds for i = 1:track_num
         @inbounds for t = 1:track_length[i]+1
             @inbounds for s = 1:K
@@ -14,12 +14,12 @@ function likelihood!(
     L::AbstractArray,
     D,
     dt,
-    error,
+    er,
     track_length,
 )
     @argcheck size(observations) == size(L)
     K, N = size(L, 2), size(L, 3)
-    d = Diffusion.(D, dt, error)
+    d = Diffusion.(D, dt, er)
     @inbounds for i = 1:N
         @inbounds for t = 1:track_length[i]+1
             @inbounds for j = 1:K
@@ -33,7 +33,7 @@ function likelihood!(
     end
 end
 
-function loglikelihood!(observations::AbstractArray, L::AbstractArray, D, dt, error)
+function loglikelihood!(observations::AbstractArray, L::AbstractArray, D, dt, er)
     @argcheck size(observations) == size(L)
     K, N = size(L, 2), size(L, 3)
     fill!(L, 0.0)
