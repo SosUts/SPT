@@ -1,17 +1,18 @@
-function preproccsing!(df::DataFrames.DataFrame)
+git function preproccsing!(df::DataFrames.DataFrame)
     df[!, :dX] .= 0.0
     df[!, :dY] .= 0.0
     df.dX[2:end] .= diff(df.corrected_x)
     df.dY[2:end] .= diff(df.corrected_y)
-    df[df.New_Frame.==1, [:dX, :dY]] .= NaN
+    df[df.New_Frame .== 0, [:dX, :dY]] .= NaN
     df.dR2 = abs2.(df.dX) + abs2.(df.dY)
     df.dR = sqrt.(df.dR2)
 
     start_point = findall(x -> x == 1, df.New_Frame)
-    endpoint = start_point[2:end] .- 2
-    terminus = size(df)[1] - 1
-    endpoint = append!(endpoint, terminus)
-    track_length = endpoint .- start_point
+    end_point = start_point[2:end] .- 2
+    terminus = size(df, 1)
+    append!(end_point, terminus)
+    track_length = Integer[]
+    track_length = end_point .- start_point .+ 1
     track_num = maximum(df.TrackID)
     max_length = Int64(maximum(df.New_Frame))
 
@@ -28,8 +29,8 @@ function data2matrix(
 )
     data = zeros(Float64, (max_length, K, track_num))
     for i = 1:track_num
-        for n = 1:track_length[i]+1
-            data[n, :, i] .= df.dR[start_point[i]+n]
+        for n = 0:track_length[i]-1
+            data[n+1, :, i] .= df.dR[start_point[i]+n]
         end
     end
     data

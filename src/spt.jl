@@ -12,6 +12,10 @@ using Plots
 using Statistics
 using Glob
 using LaTeXStrings
+using JuMP
+using Ipopt
+using Random
+
 
 import Random: AbstractRNG, GLOBAL_RNG
 import StatsBase: sem
@@ -34,6 +38,7 @@ export
     update_ξ!,
     # mle.jl
     fit_baumwelch,
+    example_mle,
     # likelihoods.jl
     likelihood!,
     loglikelihood!,
