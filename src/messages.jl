@@ -5,15 +5,14 @@ function forward!(
     A::AbstractArray,
     L::AbstractArray,
     i::Integer,
-    track_length,
+    track_length::AbstractArray,
 )
     T, K, N = size(L)
     (T == 0) && return
-    track_length = count(!iszero, L[:, 1, i])
     α[1, :, i] = a .* L[1, :, i]
     c[1, i] = sum(α[1, :, i])
     α[1, :, i] /= c[1, i]
-    @inbounds for t = 2:track_length
+    @inbounds for t = 2:track_length[i]
         @inbounds for j2 = 1:K
             @inbounds @simd for j1 = 1:K
                 α[t, j2, i] += α[t-1, j1, i] * A[j1, j2]
@@ -35,13 +34,13 @@ function backward!(
     A::AbstractArray,
     L::AbstractArray,
     i::Integer,
-    track_length,
+    track_length::AbstractArray,
 )
     T, K, N = size(L)
     @inbounds for j = 1:K
-        β[track_length[i]+1, j, i] = 1.0
+        β[track_length[i], j, i] = 1.0
     end
-    @inbounds for t in reverse(1:track_length[i])
+    @inbounds for t in reverse(1:track_length[i]-1)
         @inbounds for j1 = 1:K
             @inbounds @simd for j2 = 1:K
                 β[t, j1, i] += β[t+1, j2, i] * A[j1, j2] * L[t+1, j2, i]
@@ -59,11 +58,11 @@ function posterior!(
     β::AbstractArray,
     L::AbstractArray,
     i::Integer,
+    track_length::AbstractArray
 )
     @argcheck size(α) == size(β)
     T, K, N = size(L)
-    track_length = count(!iszero, L[:, 1, i])
-    @inbounds for t = 1:track_length
+    @inbounds for t = 1:track_length[i]
         @inbounds @simd for j = 1:K
             γ[t, j, i] = α[t, j, i] * β[t, j, i]
         end
@@ -78,11 +77,11 @@ function update_ξ!(
     A::AbstractMatrix,
     L::AbstractArray,
     i::Integer,
+    track_length::AbstractArray
 )
     @argcheck size(α) == size(β)
     T, K, N = size(L)
-    track_length = count(!iszero, L[:, 1, i])
-    @inbounds for t = 1:track_length-1
+    @inbounds for t = 1:track_length[i]-1
         @inbounds for j1 = 1:K
             @inbounds @simd for j2 = 1:K
                 ξ[t, j1, j2, i] += (α[t, j1, i] * A[j1, j2] * L[t+1, j2, i]) / c[t+1, i]

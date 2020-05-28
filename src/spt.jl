@@ -15,6 +15,7 @@ using LaTeXStrings
 using JuMP
 using Ipopt
 using Random
+using JuMP
 
 
 import Random: AbstractRNG, GLOBAL_RNG
