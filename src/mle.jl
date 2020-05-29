@@ -105,16 +105,24 @@ function fit_baumwelch(
 end
 
 function example_mle(
-    observations, track_length, D, γ, dt, er, i, j
+    observations, track_length, track_num, γ, dt, er, j
     )
-    n = track_length[i]
+    γ_sum = sum(γ[:, j, :])
     Random.seed!(1234)
-    model = Model(Ipopt.Optimizer)
-    @variable(model, 10.0 >= D >= 0.0, start = 1.0)
-    @NLobjective(model, Max, sum(γ[x, j, i] for x in 1:n) *
-        (sum((log(observations[x, j, i]) for x in 1:n)) - n * log(2(dt*D+er^2)) -
-        (sum((observations[x, j, i])^2 for x in 1:n) / 4(dt*D + er^2)))
+    model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+    @variable(model, 1.0 >= D >= 0.0, start = 0.5)
+    @NLobjective(model, Max, γ_sum *
+        (sum((log(observations[t, j, i]) for i in 1:track_num for t in 1:track_length[i])) -
+        log(2(dt*D+er^2)) -
+        (sum(abs2.(observations[t, j, i]) for i in 1:track_num for t in 1:track_length[i]) / 4(dt*D + er^2)))
     );
+    @NLobjective(model, Max, -γ_sum * log(2(dt*D+er^2)) -
+            sum(γ[t, j, i]*abs2(observations[t, j, i]) for i in 1:track_num for t in 1:track_length[i]) / 4(dt*D + er^2)
+                )
+#     @NLobjective(model, Max, γ_sum * sum(observations[t, j, i] for i in 1:track_num for t in 1:track_length[i]) -
+#                     γ_sum*log(2(dt*D+er^2)) -
+#                     sum(γ[t, j, i]*abs2(observations[t, j, i]) for i in 1:track_num for t in 1:track_length[i]) / 4(dt*D + er^2)
+#                 )
     JuMP.optimize!(model);
-    JuMP.value(D);
+    return value(D)
 end
