@@ -48,7 +48,13 @@ export
     preproccsing!,
     data2matrix,
     nomapround,
-    group_files
+    group_files,
+    # viterbi.jl
+    viterbi,
+    viterbi!
+
+
+
 
 # 読み込みたいjlファイル
 include("angle.jl")
@@ -56,7 +62,7 @@ include("displacement.jl")
 include("mle.jl")
 include("msd.jl")
 include("messages.jl")
-# include("viterbi_api.jl")
+include("viterbi.jl")
 include("likelihoods.jl")
 include("utilities.jl")
 

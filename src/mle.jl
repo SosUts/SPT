@@ -65,7 +65,7 @@ function fit_baumwelch(
                 if D[j] <= 0
                     D[j] =
                     example_mle(
-                        observations, track_length, D, γ, dt, er, i, j
+                        observations, track_length, track_num, γ, dt, er, j
                         )
                 end
             end
