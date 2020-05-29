@@ -45,7 +45,7 @@ function fit_baumwelch(
         d = Diffusion.(D, dt, er)
         likelihood!(observations, L, D, dt, er, track_length)
 
-        @inbounds for i in 1:size(observations, 3)
+        @inbounds for i in 1:N
             forward!(α, c, a, A, L, i, track_length)
             backward!(β, c, A, L, i, track_length)
             posterior!(γ, α, β, L ,i, track_length)
