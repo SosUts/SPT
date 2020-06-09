@@ -18,7 +18,6 @@ function fit_baumwelch(
     iteration::Integer = 0
     l::Float64 = 0.0
     ϵ::Float64 = 100.0
-    likelihood = Float64[]
     track_length, track_num, max_length, start_point = preproccsing!(df);
     observations = data2matrix(
         df, track_num, max_length, track_length,
@@ -45,11 +44,11 @@ function fit_baumwelch(
         d = Diffusion.(D, dt, er)
         likelihood!(observations, L, D, dt, er, track_length)
 
-        @inbounds for i in 1:N
-            forward!(α, c, a, A, L, i, track_length)
-            backward!(β, c, A, L, i, track_length)
-            posterior!(γ, α, β, L ,i, track_length)
-            update_ξ!(ξ, α, β, c, A, L, i, track_length)
+        @inbounds for n in 1:N
+            forward!(α, c, a, A, L, n, track_length)
+            backward!(β, c, A, L, n, track_length)
+            posterior!(γ, α, β, L ,n, track_length)
+            update_ξ!(ξ, α, β, c, A, L, n, track_length)
         end
         a = sum(γ[1, :, :], dims=2)[:, 1] ./ sum(γ[1, :, :])
         D = reshape(
@@ -112,16 +111,16 @@ function example_mle(
     model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
     @variable(model, 1.0 >= D >= 0.0, start = 0.5)
     @NLobjective(model, Max, γ_sum *
-        (sum((log(observations[t, j, i]) for i in 1:track_num for t in 1:track_length[i])) -
+        (sum((log(observations[t, j, n]) for n in 1:track_num for t in 1:track_length[n])) -
         log(2(dt*D+er^2)) -
-        (sum(abs2.(observations[t, j, i]) for i in 1:track_num for t in 1:track_length[i]) / 4(dt*D + er^2)))
+        (sum(abs2.(observations[t, j, n]) for n in 1:track_num for t in 1:track_length[n]) / 4(dt*D + er^2)))
     );
     @NLobjective(model, Max, -γ_sum * log(2(dt*D+er^2)) -
-            sum(γ[t, j, i]*abs2(observations[t, j, i]) for i in 1:track_num for t in 1:track_length[i]) / 4(dt*D + er^2)
+            sum(γ[t, j, n]*abs2(observations[t, j, n]) for n in 1:track_num for t in 1:track_length[n]) / 4(dt*D + er^2)
                 )
-#     @NLobjective(model, Max, γ_sum * sum(observations[t, j, i] for i in 1:track_num for t in 1:track_length[i]) -
+#     @NLobjective(model, Max, γ_sum * sum(observations[t, j, n] for n in 1:track_num for t in 1:track_length[n]) -
 #                     γ_sum*log(2(dt*D+er^2)) -
-#                     sum(γ[t, j, i]*abs2(observations[t, j, i]) for i in 1:track_num for t in 1:track_length[i]) / 4(dt*D + er^2)
+#                     sum(γ[t, j, n]*abs2(observations[t, j, n]) for n in 1:track_num for t in 1:track_length[n]) / 4(dt*D + er^2)
 #                 )
     JuMP.optimize!(model);
     return value(D)
