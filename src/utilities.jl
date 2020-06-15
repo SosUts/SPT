@@ -52,6 +52,12 @@ end
 
 nomapround(b, d) = (x -> round.(x, digits = d)).(b)
 
+"""
+    group_files(dir) -> GroupedDataFrame{DataFrame}
+
+Make grouped dataframe that exist in dir.
+# TODO: raise an error if no csv files exist in the directory.
+"""
 function group_files(dir::AbstractString)
     cd(dir)
     genotypes = readdir()

@@ -21,6 +21,7 @@ using JuMP
 import Random: AbstractRNG, GLOBAL_RNG
 import StatsBase: sem
 import Distributions: quantile, minimum, maximum, pdf, cdf, rand, logpdf, @check_args, @distr_support
+import MLJBase.int
 
 # exportしたい関数一覧
 export
