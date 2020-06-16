@@ -75,3 +75,19 @@ function group_files(dir::AbstractString)
     grouped_df = groupby(df, [:Genotype])
     return grouped_df
 end
+
+function label_mean_displacement!(
+        gdf::GroupedDataFrame;
+        displacement = :mean_dis,
+        max_dis::Int = 1
+    )
+    @argcheck displacement in [:mean_dis, :corrected_mean_dis]
+    @argcheck max_dis > 0
+    gd = transform!(gdf, displacement => x -> int(cut(x, range(0, stop=max_dis, length=21*max_dis), extend=true), type=Int))
+    if displacement == :mean_dis
+        rename!(gd, :mean_dis_function => :label)
+    else
+        rename!(gd, :corrected_mean_dis => :label)
+    end
+    groupby(gd, :Genotype)
+end
