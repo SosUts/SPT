@@ -72,7 +72,7 @@ function spiff(x::AbstractArray, y::AbstractArray)
     return corrected_x, corrected_y
 end
 
-function anisotropy(
+function anisotropy_delta_t(
         df::DataFrames.DataFrame;
         maxt::Integer = 45,
         localization_error::Float64 = 0.03,
@@ -169,4 +169,74 @@ function plot_anisotropy(grouped_df; maxt = 45, save_fig = false)
     if save_fig
         savefig("anisotropy_dia0.25.png", bbox_inches = "tight", dpi = 800)
     end
+end
+
+function anisotropy_mean_displacement(
+        df::AbstractDataFrame,
+        bin_array::Array{Float64,1}
+    )
+    result = DataFrame(
+        left = Float64[],
+        right = Float64[],
+        anisotropy = Float64[],
+        fw = Float64[],
+        bw = Float64[],
+        n = Int[]
+    )
+    for i in 1:length(bin_array)-1
+        tmp_array = df[df.bin .== i, :relative_angle]
+        fw, bw, n, anisotropy = SPT.calculate_fw_bw(tmp_array)
+        push!(result, [
+                bin_array[i], bin_array[i+1], anisotropy, fw, bw, n
+            ])
+    end
+    return result
+end
+
+function anisotropy_mean_displacement(
+        df::AbstractDataFrame,
+        bin_array::Array{Float64,1};
+        num_resample::Integer = 50,
+    )
+    result = DataFrame(
+        left = Float64[],
+        right = Float64[],
+        fw = Float64[],
+        bw = Float64[],
+        n = Int[],
+        anisotropy = Float64[],
+        std = Float64[],
+        corrected_fw = Real[],
+        corrected_bw = Real[],
+        corrected_n = Integer[],
+        corrected_anisotropy = Float64[],
+        corrected_std = Float64[]
+    )
+    for i in 1:length(bin_array)-1
+        tmp_data = df[df.bin .== i, :relative_angle]
+        fw, bw, n, anisotropy = SPT.calculate_fw_bw(tmp_data)
+
+        corrected_tmp_data = df[df.bin .== i, :corrected_angle]
+        corrected_fw, corrected_bw, corrected_n, corrected_anisotropy =
+            SPT.calculate_fw_bw(corrected_tmp_data)
+
+        boot_std = []
+        corrected_boot_std = []
+        for _ in 1:num_resample
+            boot_df = tmp_data[
+                rand(1:length(tmp_data), div(length(tmp_data), 2))]
+            corrected_boot_df = corrected_tmp_data[
+                rand(1:length(corrected_tmp_data), div(length(corrected_tmp_data), 2))]
+            _, _, _, tmp_anisotropy = SPT.calculate_fw_bw(boot_df)
+            _, _, _, corrected_tmp_anisotropy = SPT.calculate_fw_bw(corrected_boot_df)
+            append!(boot_std, tmp_anisotropy)
+            append!(corrected_boot_std, corrected_tmp_anisotropy)
+        end
+        push!(result, [
+                bin_array[i], bin_array[i+1],
+                fw, bw, n, anisotropy, std(boot_std),
+                corrected_fw, corrected_bw, corrected_n, corrected_anisotropy, std(corrected_boot_std)
+        ])
+    end
+    return result
 end

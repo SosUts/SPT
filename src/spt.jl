@@ -28,7 +28,8 @@ export
     # angle.jl
     moving_angle,
     spiff,
-    anisotropy,
+    anisotropy_delta_t,
+    anisotropy_mean_displacement,
     # msd.jl
     Diffusion,
     mean_square_disaplcement,
@@ -49,6 +50,7 @@ export
     preproccsing!,
     data2matrix,
     nomapround,
+    label_mean_displacement!,
     group_files,
     # viterbi.jl
     viterbi,
