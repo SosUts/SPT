@@ -94,7 +94,7 @@ function anisotropy_delta_t(
     )
     for t = 1:maxt
         tmp_data = df[
-            (df.delta_t .== t) .& (df.dis_aft .>= localization_error) .& 
+            (df.delta_t .== t) .& (df.dis_aft .>= localization_error) .&
             (df.dis_bfr .>= localization_error), :relative_angle]
         tmp_data = convert(Array, tmp_data)
         corrected_tmp_data = df[
@@ -104,7 +104,7 @@ function anisotropy_delta_t(
         cell_num = df[1, :cell_num]
 
         fw, bw, n, anisotropy = calculate_fw_bw(tmp_data)
-        corrected_fw, corrected_bw, corrected_n, corrected_anisotropy = 
+        corrected_fw, corrected_bw, corrected_n, corrected_anisotropy =
             calculate_fw_bw(corrected_tmp_data)
 
         boot_std = []
@@ -218,7 +218,7 @@ function anisotropy_mean_displacement(
 
         corrected_tmp_data = df[df.bin .== i, :corrected_angle]
         corrected_fw, corrected_bw, corrected_n, corrected_anisotropy =
-            SPT.calculate_fw_bw(corrected_tmp_data)
+            calculate_fw_bw(corrected_tmp_data)
 
         boot_std = []
         corrected_boot_std = []
@@ -227,8 +227,8 @@ function anisotropy_mean_displacement(
                 rand(1:length(tmp_data), div(length(tmp_data), 2))]
             corrected_boot_df = corrected_tmp_data[
                 rand(1:length(corrected_tmp_data), div(length(corrected_tmp_data), 2))]
-            _, _, _, tmp_anisotropy = SPT.calculate_fw_bw(boot_df)
-            _, _, _, corrected_tmp_anisotropy = SPT.calculate_fw_bw(corrected_boot_df)
+            _, _, _, tmp_anisotropy = calculate_fw_bw(boot_df)
+            _, _, _, corrected_tmp_anisotropy = calculate_fw_bw(corrected_boot_df)
             append!(boot_std, tmp_anisotropy)
             append!(corrected_boot_std, corrected_tmp_anisotropy)
         end
