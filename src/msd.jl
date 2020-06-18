@@ -81,6 +81,7 @@ function mean_square_disaplcement(
     tmp = _pre_calculation(df, average)
     if non_averaged
         return _average_msd(tmp), tmp
+    end
     _average_msd(tmp)
 end
 
