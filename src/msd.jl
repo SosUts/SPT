@@ -62,12 +62,26 @@ function _average_msd(df::DataFrame)
 end
 
 """
+    mean_square_disaplcement(df; average=[:ensemble, time_average], non_averaged::Bool) -> DataFrame, [DataFrame]
 
+Compute mean_square_disaplcement over files.
+
+**Example**
+```julia
+using SPT
+
+```
 """
-function mean_square_disaplcement(df::DataFrame, ; average = :ensemble)
+function mean_square_disaplcement(
+    df::DataFrame;
+    average = :ensemble,
+    non_averaged::Bool = true
+    )
     @argcheck average in [:ensemble, :time_average]
     tmp = _pre_calculation(df, average)
-    return _average_msd(tmp), tmp
+    if non_averaged
+        return _average_msd(tmp), tmp
+    _average_msd(tmp)
 end
 
 function fit_msd(df, ; max_time::Int64 = 10, loc_error::Float64 = 0.03, p0 = [1.0, 1.0])
