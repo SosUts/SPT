@@ -1,4 +1,5 @@
-function pre_calculation(df::DataFrame, ; time_average::Bool = false)
+function _pre_calculation(df::DataFrame, average = :ensemble)
+    @argcheck average in [:ensemble, :time_average]
     tmp_msd = DataFrame(
         TrackID = Int64[],
         msd = Float64[],
@@ -20,7 +21,7 @@ function pre_calculation(df::DataFrame, ; time_average::Bool = false)
                 corrected_cumsum += norm(tmp_df[start+delta_t, 3:4] .- tmp_df[start, 3:4])^2
                 start += 1
                 n += 1
-                if time_average
+                if average == :ensemble
                     break
                 end
             end
@@ -32,7 +33,7 @@ function pre_calculation(df::DataFrame, ; time_average::Bool = false)
     tmp_msd
 end
 
-function average_msd(df::DataFrame)
+function _average_msd(df::DataFrame)
     msd = DataFrame(
         delta_t = Float64[],
         msd = Float64[],
@@ -60,13 +61,13 @@ function average_msd(df::DataFrame)
     msd
 end
 
-function mean_square_disaplcement(df::DataFrame, ; time_average = false)
-    if time_average
-        tmp = pre_calculation(df)
-    else
-        tmp = pre_calculation(df, time_average = true)
-    end
-    return average_msd(tmp), tmp
+"""
+
+"""
+function mean_square_disaplcement(df::DataFrame, ; average = :ensemble)
+    @argcheck average in [:ensemble, :time_average]
+    tmp = _pre_calculation(df, average)
+    return _average_msd(tmp), tmp
 end
 
 function fit_msd(df, ; max_time::Int64 = 10, loc_error::Float64 = 0.03, p0 = [1.0, 1.0])
