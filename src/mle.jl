@@ -53,11 +53,7 @@ function fit_baumwelch(
         a = sum(γ[1, :, :], dims=2)[:, 1] ./ sum(γ[1, :, :])
         D = reshape(
             sum(abs2.(observations) .* γ , dims=(1,3)) ./ (sum(γ, dims=(1,3)) .* (4dt)),
-            K)
-        D .-= er^2/dt
-
-        println("D = $D")
-        println(any(x -> x <= 0, D))
+            K) .- er^2/dt
         if any(x -> x <= 0, D)
             println("D <= 0")
             for j in 1:K
@@ -71,10 +67,7 @@ function fit_baumwelch(
             break
         end
         A = reshape(sum(ξ, dims=(1, 4)), K,K) ./ sum(reshape(sum(ξ, dims=(1, 4)), K,K), dims=2)
-
-        # Note : filter was ~ 2times faster than replace
         l = sum(filter(!isinf, log.(c)))
-        # l = sum(replace(log.(c), -Inf=>0.0))
 
         ϵ = abs(l-pl)
         if iteration % 100 == 0
@@ -103,25 +96,52 @@ function fit_baumwelch(
     return result
 end
 
-function example_mle(
-    observations, track_length, track_num, γ, dt, er, j
+function _objective(
+    γ::AbstractArray,
+    observations::AbstractArray,
+    D::Float64,
+    j::Integer,
     )
-    γ_sum = sum(γ[:, j, :])
-    Random.seed!(1234)
-    model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
-    @variable(model, 1.0 >= D >= 0.0, start = 0.5)
-    @NLobjective(model, Max, γ_sum *
-        (sum((log(observations[t, j, n]) for n in 1:track_num for t in 1:track_length[n])) -
-        log(2(dt*D+er^2)) -
-        (sum(abs2.(observations[t, j, n]) for n in 1:track_num for t in 1:track_length[n]) / 4(dt*D + er^2)))
-    );
-    @NLobjective(model, Max, -γ_sum * log(2(dt*D+er^2)) -
-            sum(γ[t, j, n]*abs2(observations[t, j, n]) for n in 1:track_num for t in 1:track_length[n]) / 4(dt*D + er^2)
-                )
+    γ_sum = sum(γ[:, j, ;])
+    γ_observations = sum(abs2.(observations[:, j, :]) .* γ[:, j, :])
+    γ_sum*log(dt*D+er^2) + γ_observations/4(dt*D+er^2)
+end
+
+function _update_D!(
+    grad::Float64,
+    D::Float64;
+    learning_rate::Float64
+    )
+    opt = RADAM()
+    D = param(D)
+    
+    ps = params(model)
+    gs = gradient(ps) do
+        loss(x, y)
+    end
+
+Flux.Optimise.update!(opt, ps, gs)
+    @argcheck 0 <= learning_rate <= 1
+
+
+# function example_mle(
+#     observations, track_length, track_num, γ, dt, er, j
+#     )
+#     γ_sum = sum(γ[:, j, :])
+#     model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+#     @variable(model, 1.0 >= D >= 0.0, start = 0.5)
+#     @NLobjective(model, Max, γ_sum *
+#         (sum((log(observations[t, j, n]) for n in 1:track_num for t in 1:track_length[n])) -
+#         log(2(dt*D+er^2)) -
+#         (sum(abs2.(observations[t, j, n]) for n in 1:track_num for t in 1:track_length[n]) / 4(dt*D + er^2)))
+#     );
+#     @NLobjective(model, Max, -γ_sum * log(2(dt*D+er^2)) -
+#             sum(γ[t, j, n]*abs2(observations[t, j, n]) for n in 1:track_num for t in 1:track_length[n]) / 4(dt*D + er^2)
+#                 )
 #     @NLobjective(model, Max, γ_sum * sum(observations[t, j, n] for n in 1:track_num for t in 1:track_length[n]) -
 #                     γ_sum*log(2(dt*D+er^2)) -
 #                     sum(γ[t, j, n]*abs2(observations[t, j, n]) for n in 1:track_num for t in 1:track_length[n]) / 4(dt*D + er^2)
 #                 )
-    JuMP.optimize!(model);
-    return value(D)
-end
+#     JuMP.optimize!(model);
+#     return value(D)
+# end
