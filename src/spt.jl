@@ -1,4 +1,4 @@
-module SPT
+module spt
 
 using ArgCheck
 using Clustering
@@ -12,10 +12,11 @@ using Plots
 using Statistics
 using Glob
 using LaTeXStrings
-using JuMP
-using Ipopt
+# using JuMP
+# using Ipopt
+using Flux
 using Random
-using JuMP
+# using JuMP
 
 
 import Random: AbstractRNG, GLOBAL_RNG
