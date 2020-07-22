@@ -1,4 +1,4 @@
-function _pre_calculation(df::DataFrame, average = :ensemble)
+function _msd_pre_calculation(df::DataFrame, average = :ensemble)
     @argcheck average in [:ensemble, :time_average]
     tmp_msd = DataFrame(
         TrackID = Int64[],
@@ -21,7 +21,7 @@ function _pre_calculation(df::DataFrame, average = :ensemble)
                 corrected_cumsum += norm(tmp_df[start+delta_t, 3:4] .- tmp_df[start, 3:4])^2
                 start += 1
                 n += 1
-                if average == :ensemble
+                if average == :time_average
                     break
                 end
             end
@@ -78,14 +78,19 @@ function mean_square_disaplcement(
     non_averaged::Bool = true
     )
     @argcheck average in [:ensemble, :time_average]
-    tmp = _pre_calculation(df, average)
+    tmp = _msd_pre_calculation(df, average)
     if non_averaged
         return _average_msd(tmp), tmp
     end
     _average_msd(tmp)
 end
 
-function fit_msd(df, ; max_time::Int64 = 10, loc_error::Float64 = 0.03, p0 = [1.0, 1.0])
+function fit_msd(
+    df;
+    max_time::Int64 = 10,
+    loc_error::Float64 = 0.03,
+    p0::AbstractVector = [1.0, 1.0]
+    )
     @. model(x, p) = 4 * p[1] * x^p[2] + 4 * 0.03^2
     fit = curve_fit(model, df.delta_t[1:max_time], df.msd[1:max_time], p0)
     fit.param
