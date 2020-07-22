@@ -31,8 +31,11 @@ export
     spiff,
     anisotropy_delta_t,
     anisotropy_mean_displacement,
-    # msd.jl
+    # displacement.jl
     Diffusion,
+    suffstats,
+    fit_mle,
+    # msd.jl
     mean_square_disaplcement,
     plot_msd,
     # messages.jl
@@ -42,7 +45,7 @@ export
     update_ξ!,
     # mle.jl
     fit_baumwelch,
-    example_mle,
+    # example_mle,
     # likelihoods.jl
     likelihood!,
     loglikelihood!,

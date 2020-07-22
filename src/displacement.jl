@@ -39,13 +39,22 @@ mutable struct DiffusionStats <: SufficientStats
     ϵ::Float64
 end
 
-function suffstats(::Type{<:Diffusion}, x::AbstractArray{T}) where T <: Real
+function suffstats(::Type{<:Diffusion}, x::AbstractArray)
     n = length(x)
     r = 0.0
     for i = 1:n
         @inbounds r += x[i]^2
     end
-    DiffusionStats(r, n, 0.022, 0.03)
+    DiffusionStats(r, Float64(n), 0.001, 0.03)
+end
+
+function suffstats(d::Diffusion, x::AbstractArray)
+    n = length(x)
+    r = 0.0
+    for i = 1:n
+        @inbounds r += x[i]^2
+    end
+    DiffusionStats(r, Float64(n), d.δ, d.ϵ)
 end
 
 function suffstats(::Type{<:Diffusion}, x::AbstractArray{T}, w::AbstractArray{Float64}) where T <: Real
@@ -61,7 +70,7 @@ function suffstats(::Type{<:Diffusion}, x::AbstractArray{T}, w::AbstractArray{Fl
         r += wi * xi^2
         tw += wi
     end
-    DiffusionStats(r, tw, 0.022, 0.03)
+    DiffusionStats(r, tw, 1, 1)
 end
 
 function fit_mle(::Type{<:Diffusion}, ss::DiffusionStats)
@@ -69,3 +78,5 @@ function fit_mle(::Type{<:Diffusion}, ss::DiffusionStats)
     D = ss.r/(4*ss.w*ss.δ) - ss.ϵ^2/ss.δ
     Diffusion(D, ss.δ, ss.ϵ)
 end
+
+test() = println("hello")
