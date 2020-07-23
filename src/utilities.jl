@@ -1,3 +1,15 @@
+function add_dR!(df::DataFrame)
+    df[!, :dX] .= prepend!(diff(df.POSITION_X), NaN)
+    df[!, :dY] .= prepend!(diff(df.POSITION_Y), NaN)
+    df[!, :corrected_dX] .= prepend!(diff(df.corrected_x), NaN)
+    df[!, :corrected_dY] .= prepend!(diff(df.corrected_y), NaN)
+    df[df.New_Frame .== 1, [:dX, :dY, :corrected_dX, :corrected_dY]] .= NaN
+    df.dR2 = abs2.(df.dX) + abs2.(df.dY)
+    df.dR = sqrt.(df.dR2)
+    df.corrected_dR2 = abs2.(df.corrected_dX) + abs2.(df.corrected_dY)
+    df.corrected_dR = sqrt.(df.corrected_dR2)
+end
+
 function preproccsing!(df::DataFrames.DataFrame)
     df[!, :dX] .= 0.0
     df[!, :dY] .= 0.0
