@@ -91,8 +91,8 @@ function fit_msd(
     loc_error::Float64 = 0.03,
     p0::AbstractVector = [1.0, 1.0]
     )
-    @. model(x, p) = 4 * p[1] * x^p[2] + 4 * 0.03^2
-    fit = curve_fit(model, df.delta_t[1:max_time], df.msd[1:max_time], p0)
+    @. model(x, p) = 4 * p[1] * x^p[2] + 4 * loc_error^2
+    fit = curve_fit(model, df.delta_t[1:max_time].*0.022, df.msd[1:max_time], p0)
     fit.param
 end
 
@@ -117,7 +117,7 @@ function plot_msd(grouped_df; maxt = 10, save_fig = false)
     end
 
     xlim(0,)
-    xlabel("Δt (sec)", fontsize = 14, family = "Arial")
+    xlabel("delta t (sec)", fontsize = 14, family = "Arial")
     xticks([0.05, 0.1, 0.15, 0.2, 0.25], fontsize = 12)
 
     ylim(0,)
@@ -125,7 +125,7 @@ function plot_msd(grouped_df; maxt = 10, save_fig = false)
     yticks(fontsize = 12)
 
     legend(bbox_to_anchor = (1.02, 1.0), loc = 2, borderaxespad = 0.0, fontsize = 14)
-    if save_fig
-        savefig("tamsd_dia0.25.png", bbox_inches = "tight", dpi = 800)
-    end
+    # if save_fig
+    #     savefig("tamsd_dia0.5.png", bbox_inches = "tight", dpi = 800)
+    # end
 end

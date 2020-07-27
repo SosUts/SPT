@@ -8,7 +8,7 @@ using Distributions
 using HMMBase
 using LinearAlgebra
 using LsqFit
-using Plots
+using PyPlot
 using Statistics
 using Glob
 using LaTeXStrings

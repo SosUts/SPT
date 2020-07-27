@@ -96,32 +96,31 @@ function fit_baumwelch(
     return result
 end
 
-function _objective(
-    γ::AbstractArray,
-    observations::AbstractArray,
-    D::Float64,
-    j::Integer,
-    )
-    γ_sum = sum(γ[:, j, ;])
-    γ_observations = sum(abs2.(observations[:, j, :]) .* γ[:, j, :])
-    γ_sum*log(dt*D+er^2) + γ_observations/4(dt*D+er^2)
-end
+# function _objective(
+#     γ::AbstractArray,
+#     observations::AbstractArray,
+#     D::Float64,
+#     j::Integer,
+#     )
+#     γ_sum = sum(γ[:, j, ;])
+#     γ_observations = sum(abs2.(observations[:, j, :]) .* γ[:, j, :])
+#     γ_sum*log(dt*D+er^2) + γ_observations/4(dt*D+er^2)
+# end
 
-function _update_D!(
-    grad::Float64,
-    D::Float64;
-    learning_rate::Float64
-    )
-    opt = RADAM()
-    D = param(D)
-    
-    ps = params(model)
-    gs = gradient(ps) do
-        loss(x, y)
-    end
+# function _update_D!(
+#     grad::Float64,
+#     D::Float64;
+#     learning_rate::Float64
+#     )
+#     opt = RADAM()
+#     D = param(D)
+#     ps = params(model)
+#     gs = gradient(ps) do
+#         loss(x, y)
+#     end
 
-Flux.Optimise.update!(opt, ps, gs)
-    @argcheck 0 <= learning_rate <= 1
+# Flux.Optimise.update!(opt, ps, gs)
+#     @argcheck 0 <= learning_rate <= 1
 
 
 # function example_mle(
