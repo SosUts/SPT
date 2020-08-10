@@ -106,3 +106,7 @@ function label_mean_displacement!(
         )
     return collect(bin_array)
 end
+
+function distance(r::AbstractMatrix, δt::Int)
+    sqrt((r[1+δt, 2] - r[1, 2])^2 + (r[1+δt, 1] - r[1, 1])^2)
+end
