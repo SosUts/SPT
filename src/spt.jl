@@ -58,7 +58,9 @@ export
     group_files,
     # viterbi.jl
     viterbi,
-    viterbi!
+    viterbi!,
+    # velocity_autocorrelation.jl
+    vacf
 
 
 
@@ -72,6 +74,7 @@ include("messages.jl")
 include("viterbi.jl")
 include("likelihoods.jl")
 include("utilities.jl")
+include("velocity_autocorrelation.jl")
 
 # To be removed in a future version
 # ---------------------------------
