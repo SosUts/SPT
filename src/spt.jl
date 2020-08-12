@@ -52,7 +52,7 @@ export
     # utilities.jl
     create_prior,
     preproccsing!,
-    data2matrix,
+    # data2matrix,
     nomapround,
     label_mean_displacement!,
     group_files,
@@ -75,6 +75,7 @@ include("viterbi.jl")
 include("likelihoods.jl")
 include("utilities.jl")
 include("velocity_autocorrelation.jl")
+include("preprocessing.jl")
 
 # To be removed in a future version
 # ---------------------------------
