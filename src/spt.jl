@@ -5,16 +5,16 @@ using Clustering
 using CSV
 using DataFrames
 using Distributions
-using HMMBase
+# using HMMBase
 using LinearAlgebra
 using LsqFit
 using PyPlot
 using Statistics
-using Glob
-using LaTeXStrings
+# using Glob
+# using LaTeXStrings
 # using JuMP
 # using Ipopt
-using Flux
+# using Flux
 using Random
 # using JuMP
 

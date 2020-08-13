@@ -1,36 +1,44 @@
-function _msd_pre_calculation(df::DataFrame, average = :ensemble)
-    @argcheck average in [:ensemble, :time_average]
-    tmp_msd = DataFrame(
-        TrackID = Int64[],
-        msd = Float64[],
-        corrected_msd = Float64[],
-        delta_t = Int64[],
-        n = Int64[],
+function ensemble_average_msd(
+        data::AbstractMatrix{Float64},
     )
-    @inbounds @fastmath for id in sort(collect(Set(df.TrackID)))
-        column_list = [:POSITION_X, :POSITION_Y, :corrected_x, :corrected_y]
-        tmp_df = convert(Matrix, df[df.TrackID.==id, column_list])
-        track_length = size(tmp_df, 1)
-        @inbounds @fastmath for delta_t = 1:track_length-1
-            start = 1
-            cumsum = 0.0
-            corrected_cumsum = 0.0
-            n = 0
-            @inbounds @fastmath while start + delta_t <= track_length
-                cumsum += norm(tmp_df[start+delta_t, 1:2] .- tmp_df[start, 1:2])^2
-                corrected_cumsum += norm(tmp_df[start+delta_t, 3:4] .- tmp_df[start, 3:4])^2
-                start += 1
-                n += 1
-                if average == :time_average
-                    break
-                end
-            end
-            cumsum /= n
-            corrected_cumsum /= n
-            push!(tmp_msd, [id, cumsum, corrected_cumsum, delta_t, n])
-        end
+    T = size(data, 1)
+    ? = 1
+    c = 0.0
+    @inbounds for t in 1:(T-1)
+        c += distance(data, t, 1)
     end
-    tmp_msd
+    c /= (T-1)
+end
+
+function _msd_pre_calculation(
+    df::DataFrame,
+    average::Symbol = :ensemble_average
+    )
+    @argcheck average in [:ensemble_average, :time_average]
+    result = DataFrame(
+        TrackID = Int64[],
+        n = Int64[],
+        ? = Int64[],
+        msd = Float64[]
+    )
+    @inbounds for id in sort(collect(Set(df.TrackID)))
+    column_list = [:POSITION_X, :POSITION_Y, :corrected_x, :corrected_y]
+    data = convert(Matrix, df[df.TrackID .== id, column_list])
+    T = size(tmp_df, 1)
+    for ? in 1:T-1
+        c = 0.0
+        n = 1
+        for t in 1:T-?
+            c += distance(data, t, ?)
+            n += 1
+            if average == :ensemble_average
+                break
+            end
+        end
+        c /= n
+        push!(result, [id, n, ?, c])
+    end
+    result
 end
 
 function _average_msd(df::DataFrame)
@@ -44,17 +52,17 @@ function _average_msd(df::DataFrame)
     )
     @inbounds @simd for i = 1:maximum(df.delta_t)
         total_n = sum(df[df.delta_t.==i, :n])
-        tmp_msd = df[df.delta_t.==i, :msd]
+        result = df[df.delta_t.==i, :msd]
         tmp_corrected_msd = df[df.delta_t.==i, :corrected_msd]
         push!(
             msd,
             [
                 i,
-                mean(tmp_msd),
+                mean(result),
                 mean(tmp_corrected_msd),
                 total_n,
-                std(tmp_msd),
-                sem(tmp_msd),
+                std(result),
+                sem(result),
             ],
         )
     end
@@ -62,7 +70,7 @@ function _average_msd(df::DataFrame)
 end
 
 """
-    mean_square_disaplcement(df; average=[:ensemble, time_average], non_averaged::Bool) -> DataFrame, [DataFrame]
+    mean_square_disaplcement(df; average=[:ensemble_average, time_average], non_averaged::Bool) -> DataFrame, [DataFrame]
 
 Compute mean_square_disaplcement over files.
 
@@ -74,10 +82,10 @@ using SPT
 """
 function mean_square_disaplcement(
     df::DataFrame;
-    average = :ensemble,
+    average = :ensemble_average,
     non_averaged::Bool = true
     )
-    @argcheck average in [:ensemble, :time_average]
+    @argcheck average in [:ensemble_average, :time_average]
     tmp = _msd_pre_calculation(df, average)
     if non_averaged
         return _average_msd(tmp), tmp
