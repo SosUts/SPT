@@ -10,6 +10,7 @@ using LinearAlgebra
 using LsqFit
 using PyPlot
 using Statistics
+using StatsBase
 # using Glob
 # using LaTeXStrings
 # using JuMP
