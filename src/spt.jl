@@ -11,7 +11,7 @@ using LsqFit
 using PyPlot
 using Statistics
 using StatsBase
-# using Glob
+using Glob
 # using LaTeXStrings
 # using JuMP
 # using Ipopt

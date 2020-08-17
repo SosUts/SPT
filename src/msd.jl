@@ -18,11 +18,11 @@ function mean_square_disaplcement(
     return_tamsd::Bool = false
     )
     @argcheck method in [:ensemble_average, :ensemble_time_average]
-    ta_msd = timeaverage_msd(df, xlabel, ylabel, method)
+    ta_msd = time_average_msd(df, xlabel, ylabel, method)
     return_tamsd ? (ensemble_tamsd(ta_msd), ta_msd) : ensemble_tamsd(ta_msd)
 end
 
-function timeaverage_msd(
+function time_average_msd(
     df::DataFrame,
     xlabel::Symbol,
     ylabel::Symbol,
@@ -79,18 +79,18 @@ function fit_msd(
     )
     @argcheck loc_error >= 0.0
     @. model(x, p) = 4 * p[1] * x^p[2] + 4 * loc_error^2
-    fit = curve_fit(model, df.delta_t[1:max_time], df.msd[1:max_time], p0)
+    fit = curve_fit(
+        model, df.delta_t[1:max_time],
+        df.msd[1:max_time], p0, lower=[0.0, 0.0], upper=[10.0, 2]
+        )
     fit.param
 end
 
-# function fit_msd(df::DataFrame, δ::Int, method::Symbol)
-#     @argcheck δ >= 1
-#     @argcheck method in [:arithmetic, :geometric]
-#     if method == :arithmetic
-#         return log(mean(df[df.delta_t .== δ, :msd])/mean(df[df.delta_t .== 1, :msd]))/log(δ/1)
-#     else
-#         return 
-# end
+function fit_msd(df::DataFrame, δ::Int)
+    @argcheck δ >= 1
+    # @argcheck method in [:arithmetic, :geometric]
+    log(mean(df[df.delta_t .== δ, :msd])/mean(df[df.delta_t .== 1, :msd]))/log(δ/1)
+end
 
 function plot_msd(grouped_df; maxt = 10, save_fig = false)
     for i = 1:length(grouped_df)
