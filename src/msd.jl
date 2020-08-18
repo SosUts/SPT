@@ -38,15 +38,15 @@ function time_average_msd(
         data = convert(Matrix, df[df.TrackID.==id, [xlabel, ylabel]])
         T = size(data, 1)
         @inbounds for δ in 1:T-1
-            msd = 0.0
+            c = 0.0
             @inbounds for t in 1:(T-δ)
-                msd += squared_displacement(data, t, δ)
+                c += squared_displacement(data, t, δ)
                 if method == :ensemble_average
                     break
                 end
             end
-            msd /= (T-δ)
-            push!(tamsd, [id, msd, δ, T-δ])
+            c /= (T-δ)
+            push!(tamsd, [id, c, δ, T-δ])
         end
     end
     tamsd
@@ -121,9 +121,9 @@ function plot_msd(grouped_df; maxt = 10, save_fig = false)
     yticks(fontsize = 12)
 
     legend(bbox_to_anchor = (1.02, 1.0), loc = 2, borderaxespad = 0.0, fontsize = 14)
-    # if save_fig
-    #     savefig("tamsd_dia0.5.png", bbox_inches = "tight", dpi = 800)
-    # end
+    if save_fig
+        savefig("tamsd_dia0.5.png", bbox_inches = "tight", dpi = 800)
+    end
 end
 
 # function ensemble_msd(

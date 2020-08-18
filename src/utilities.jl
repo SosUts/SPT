@@ -47,6 +47,19 @@ function data2matrix(
     data
 end
 
+function data2matrix(df::DataFrame)
+    N = maximum(df.TrackID)
+    data = Matrix{Union{Nothing, Float64}}(nothing, maximum(df.t), N)
+    for n in 1:N
+        tmp_data = filter(!isnan, df[df.TrackID .== n, :dr])
+        T = length(tmp_data)
+        for t in 1:T
+            data[t, n] = tmp_data[t]
+        end
+    end
+    data
+end
+
 function create_prior(df::DataFrames.DataFrame, K::Integer, dt::Float64, er::Float64)
     a::Array{Float64,1} = rand(Float64, K)
     a /= sum(a)

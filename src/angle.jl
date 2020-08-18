@@ -171,27 +171,27 @@ function plot_anisotropy(grouped_df; maxt = 45, save_fig = false)
     end
 end
 
-function anisotropy_mean_displacement(
-        df::AbstractDataFrame,
-        bin_array::Array{Float64,1}
-    )
-    result = DataFrame(
-        left = Float64[],
-        right = Float64[],
-        anisotropy = Float64[],
-        fw = Float64[],
-        bw = Float64[],
-        n = Int[]
-    )
-    for i in 1:length(bin_array)-1
-        tmp_array = df[df.bin .== i, :relative_angle]
-        fw, bw, n, anisotropy = SPT.calculate_fw_bw(tmp_array)
-        push!(result, [
-                bin_array[i], bin_array[i+1], anisotropy, fw, bw, n
-            ])
-    end
-    return result
-end
+# function anisotropy_mean_displacement(
+#         df::AbstractDataFrame,
+#         bin_array::Array{Float64,1}
+#     )
+#     result = DataFrame(
+#         left = Float64[],
+#         right = Float64[],
+#         anisotropy = Float64[],
+#         fw = Float64[],
+#         bw = Float64[],
+#         n = Int[]
+#     )
+#     for i in 1:length(bin_array)-1
+#         tmp_array = df[df.bin .== i, :relative_angle]
+#         fw, bw, n, anisotropy = SPT.calculate_fw_bw(tmp_array)
+#         push!(result, [
+#                 bin_array[i], bin_array[i+1], anisotropy, fw, bw, n
+#             ])
+#     end
+#     return result
+# end
 
 function anisotropy_mean_displacement(
         df::AbstractDataFrame,

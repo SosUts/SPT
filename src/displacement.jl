@@ -15,8 +15,8 @@ end
 
 @distr_support Diffusion 0 +Inf
 
-minimum(d::Diffusion) = 0.0
-maximum(d::Diffusion) = +Inf
+Distributions.minimum(d::Diffusion) = 0.0
+Distributions.maximum(d::Diffusion) = +Inf
 cdf(d::Diffusion, x::Real) =
     1 - exp(-x^2 / 4(d.D * d.δ + d.ϵ^2))
 quantile(d::Diffusion, p) = sqrt(-4(d.D * d.δ + d.ϵ^2) * log(1 - p))
@@ -78,5 +78,3 @@ function fit_mle(::Type{<:Diffusion}, ss::DiffusionStats)
     D = ss.r/(4*ss.w*ss.δ) - ss.ϵ^2/ss.δ
     Diffusion(D, ss.δ, ss.ϵ)
 end
-
-test() = println("hello")
