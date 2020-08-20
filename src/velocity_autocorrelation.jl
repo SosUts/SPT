@@ -6,7 +6,7 @@ function vacf(
     N = maximum(df.TrackID)
     result = DataFrame(n = Int[], τ = Int[], value = Float64[])
     @inbounds for n in 1:N
-        data = Matrix(df[df.TrackID .== n, [:POSITION_X, :POSITION_Y]])
+        data = Matrix(df[df.TrackID .== n, [:x, :]])
         T = size(data, 1)
         @inbounds for τ in 0:max_τ
             s = 0.0
