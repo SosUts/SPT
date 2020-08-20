@@ -61,7 +61,9 @@ export
     viterbi,
     viterbi!,
     # velocity_autocorrelation.jl
-    vacf
+    vacf,
+    # ctrw.jl
+    ctrw
 
 
 
@@ -71,6 +73,7 @@ include("angle.jl")
 include("displacement.jl")
 include("mle.jl")
 include("msd.jl")
+include("ctrw.jl")
 include("messages.jl")
 include("mme.jl")
 include("viterbi.jl")

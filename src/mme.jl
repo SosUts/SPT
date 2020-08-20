@@ -39,28 +39,28 @@ function StatsBase.moment(
     xlabel::Symbol,
     ylabel::Symbol
 )
-result = DataFrame(
-    TrackID = Int64[],
-    fourth_moment = Float64[],
-    second_moment = Float64[],
-    delta_t = Int64[],
-    n = Int64[],
-)
-@inbounds for id in sort(collect(Set(df.TrackID)))
-    data = convert(Matrix, df[df.TrackID.==id, [xlabel, ylabel]])
-    T = size(data, 1)
-    T = 100
-    @inbounds for δ in 1:T-1
-        c⁴ = 0.0
-        c² = 0.0
-        @inbounds for t in 1:(T-δ)
-            c⁴ += spt.displacement(data, t, δ)^4
-            c² += spt.displacement(data, t, δ)^2
+    result = DataFrame(
+        TrackID = Int64[],
+        fourth_moment = Float64[],
+        second_moment = Float64[],
+        delta_t = Int64[],
+        n = Int64[],
+    )
+    @inbounds for id in sort(collect(Set(df.TrackID)))
+        data = convert(Matrix, df[df.TrackID.==id, [xlabel, ylabel]])
+        T = size(data, 1)
+        T = 100
+        @inbounds for δ in 1:T-1
+            c⁴ = 0.0
+            c² = 0.0
+            @inbounds for t in 1:(T-δ)
+                c⁴ += spt.displacement(data, t, δ)^4
+                c² += spt.displacement(data, t, δ)^2
+            end
+            c⁴ /= (T-δ)
+            c² /= (T-δ)
+            push!(result, [id, c⁴, c², δ, T-δ])
         end
-        c⁴ /= (T-δ)
-        c² /= (T-δ)
-        push!(result, [id, c⁴, c², δ, T-δ])
     end
-end
-result
+    result
 end

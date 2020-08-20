@@ -15,8 +15,8 @@ end
 
 @distr_support Diffusion 0 +Inf
 
-Distributions.minimum(d::Diffusion) = 0.0
-Distributions.maximum(d::Diffusion) = +Inf
+# Distributions.minimum(d::Diffusion) = 0.0
+# Distributions.maximum(d::Diffusion) = +Inf
 cdf(d::Diffusion, x::Real) =
     1 - exp(-x^2 / 4(d.D * d.δ + d.ϵ^2))
 quantile(d::Diffusion, p) = sqrt(-4(d.D * d.δ + d.ϵ^2) * log(1 - p))
