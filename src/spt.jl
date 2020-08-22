@@ -39,6 +39,7 @@ export
     # msd.jl
     mean_square_disaplcement,
     plot_msd,
+    
     # messages.jl
     forward!,
     backward!,

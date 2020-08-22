@@ -10,23 +10,20 @@ using SPT
 
 ```
 """
-function mean_square_disaplcement(
+function ensemble_time_average_msd(
     df::DataFrame,
     xlabel::Symbol,
     ylabel::Symbol;
-    method::Symbol = :ensemble_time_average,
     return_tamsd::Bool = false
     )
-    @argcheck method in [:ensemble_average, :ensemble_time_average]
-    ta_msd = time_average_msd(df, xlabel, ylabel, method)
+    ta_msd = time_average_msd(df, xlabel, ylabel)
     return_tamsd ? (ensemble_tamsd(ta_msd), ta_msd) : ensemble_tamsd(ta_msd)
 end
 
 function time_average_msd(
     df::DataFrame,
     xlabel::Symbol,
-    ylabel::Symbol,
-    method::Symbol
+    ylabel::Symbol
     )
     tamsd = DataFrame(
         TrackID = Int64[],
@@ -41,15 +38,35 @@ function time_average_msd(
             c = 0.0
             @inbounds for t in 1:(T-δ)
                 c += squared_displacement(data, t, δ)
-                if method == :ensemble_average
-                    break
-                end
             end
             c /= (T-δ)
             push!(tamsd, [id, c, δ, T-δ])
         end
     end
     tamsd
+end
+
+function ensemble_msd(
+    df::DataFrame,
+    xlabel::Symbol,
+    ylabel::Symbol
+    )
+    eamsd = DataFrame(
+        TrackID = Int64[],
+        msd = Float64[],
+        n = Int[],
+        delta_t = Int64[]
+    )
+    @inbounds for id in sort(collect(Set(df.TrackID)))
+        data = convert(Matrix, df[df.TrackID.==id, [xlabel, ylabel]])
+        T = size(data, 1)
+        @inbounds for δ in 1:T-1
+            push!(eamsd,
+            [id, squared_displacement(data, 1, δ), 1, δ]
+            )
+        end
+    end
+    eamsd
 end
 
 function ensemble_tamsd(df::DataFrame)
