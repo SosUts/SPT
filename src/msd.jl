@@ -75,13 +75,14 @@ function ensemble_tamsd(df::DataFrame)
         msd = Float64[],
         n = Int64[],
         std = Float64[],
-        sem = Float64[],
+        sem = Float64[]
     )
     @inbounds @simd for i = 1:maximum(df.delta_t)
         data = df[df.delta_t .== i, :]
         push!(
             eatamsd, [
-                i, mean(data.msd), sum(data.n), std(data.msd),sem(data.msd),
+                i, mean(data.msd), sum(data.n),
+                std(data.msd), sem(data.msd)
             ],
         )
     end
@@ -115,16 +116,16 @@ function plot_msd(grouped_df; maxt = 10, save_fig = false)
         tmp_df = grouped_df[i]
         for t = 1:maxt
             a = tmp_df[tmp_df.delta_t.==t, :]
-            push!(result, [t, mean(a.msd), sum(a.n), sem(a.msd)])
+            push!(result, [t, mean(a.msd), sum(a.n), sem(a.msd), std(a.msd)])
         end
-        insert!(result, 1, [0, 0, 0, 0])
+        insert!(result, 1, [0, 0, 0, 0, 0])
         result = reduce(vcat, result')
         genotype = tmp_df[1, :Genotype]
         plot(result[:, 1] * (1 / 45), result[:, 2], label = "$genotype")
         fill_between(
             result[:, 1] * (1 / 45),
-            result[:, 2] .- result[:, 4],
-            result[:, 2] .+ result[:, 4],
+            result[:, 2] .- result[:, 5],
+            result[:, 2] .+ result[:, 5],
             alpha = 0.2,
         )
     end
@@ -137,20 +138,8 @@ function plot_msd(grouped_df; maxt = 10, save_fig = false)
     ylabel("MSD (μm^2 / sec)", fontsize = 14, family = "Arial")
     yticks(fontsize = 12)
 
-    legend(bbox_to_anchor = (1.02, 1.0), loc = 2, borderaxespad = 0.0, fontsize = 14)
+    legend(bbox_to_anchor = (1.05, 1.0), loc = 2, borderaxespad = 0.0, fontsize = 14)
     if save_fig
         savefig("tamsd_dia0.5.png", bbox_inches = "tight", dpi = 800)
     end
 end
-
-# function ensemble_msd(
-#         data::AbstractMatrix{Float64},
-#     )
-#     T = size(data, 1)
-#     δ = 1
-#     c = 0.0
-#     @inbounds for t in 1:(T-1)
-#         c += distance(data, 1)
-#     end
-#     c /= (T-1)
-# end

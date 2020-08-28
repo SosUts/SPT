@@ -128,4 +128,31 @@ function displacement(r::AbstractMatrix, t::Int, δ::Int)
     sqrt((r[t+δ, 2] - r[t, 2])^2 + (r[t+δ, 1] - r[t, 1])^2)
 end
 
-squared_displacement(r::AbstractMatrix, t::Int, δ::Int) = displacement(r, t, δ)^2
+function squared_displacement(
+    r::AbstractMatrix, t::Int, δ::Int
+    )
+    displacement(r, t, δ)^2
+end
+
+function time_average(
+        df::DataFrame,
+        f::Function,
+        idlabel::Symbol,
+        datalabel
+    )
+    result = []
+    N = maximum(df[:, idlabel])
+    @inbounds for n in 1:N
+        data = Matrix(df[df[!, idlabel] .== n, datalabel])
+        T = size(data, 1)
+        for δ in 1:T-1
+            c = 0.0
+            @simd for t in 1:T-δ
+                c += f(data, t, δ)
+            end
+            c /= (T-δ)
+            push!(result, [n, c, δ])
+        end
+    end
+    result
+end

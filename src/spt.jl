@@ -12,6 +12,7 @@ using PyPlot
 using Statistics
 using StatsBase
 using Glob
+using HypergeometricFunctions
 # using LaTeXStrings
 # using JuMP
 # using Ipopt
@@ -39,7 +40,6 @@ export
     # msd.jl
     mean_square_disaplcement,
     plot_msd,
-    
     # messages.jl
     forward!,
     backward!,
@@ -64,7 +64,9 @@ export
     # velocity_autocorrelation.jl
     vacf,
     # ctrw.jl
-    ctrw
+    ctrw,
+    # dynamical_functional.jl
+    dynamical_functional
 
 
 
@@ -82,6 +84,7 @@ include("likelihoods.jl")
 include("utilities.jl")
 include("velocity_autocorrelation.jl")
 include("preprocessing.jl")
+include("ergodicity_test.jl")
 
 # To be removed in a future version
 # ---------------------------------
