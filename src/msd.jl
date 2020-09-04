@@ -93,13 +93,13 @@ function fit_msd(
     df;
     max_time::Int64 = 10,
     loc_error::Float64 = 0.03,
-    p0::AbstractVector = [1.0, 1.0]
+    p0::AbstractVector = [0.5, 0.5]
     )
     @argcheck loc_error >= 0.0
     @. model(x, p) = 4 * p[1] * x^p[2] + 4 * loc_error^2
     fit = curve_fit(
-        model, df.delta_t[1:max_time],
-        df.msd[1:max_time], p0, lower=[0.0, 0.0], upper=[10.0, 2]
+        model, df.delta_t[1:max_time].*(1/45),
+        df.msd[1:max_time], p0, lower=[0.0, 0.0], upper=[10.0, 2.0]
         )
     fit.param
 end

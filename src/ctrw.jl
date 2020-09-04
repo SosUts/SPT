@@ -45,8 +45,8 @@ function ctrw(α::Real, γ::Real, T::Int, N::Int)
     rawTimeY = cumsum(jumpsY)
 
     tY = rawTimeY*T / maximum(rawTimeY)
-    x = cumsum(symmetric_alpha_levy(2.0, N, γ^(α/2)))
-    y = cumsum(symmetric_alpha_levy(2.0, N, γ^(α/2)))
+    x = cumsum(symmetric_alpha_levy(α, N, γ^(α/2)))
+    y = cumsum(symmetric_alpha_levy(α, N, γ^(α/2)))
     tOut = collect(0:1:N).*T/N
     xOut = Vector{Float64}(undef, N)
     yOut = Vector{Float64}(undef, N)

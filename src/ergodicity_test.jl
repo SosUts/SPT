@@ -40,3 +40,4 @@ function dynamical_functional(
     # e2 /= (T^2+T)
     e1-e2+(1/(T+1))
 end
+
