@@ -39,16 +39,16 @@ mutable struct DiffusionStats <: SufficientStats
     ϵ::Float64
 end
 
-function suffstats(::Type{<:Diffusion}, x::AbstractArray)
+function Distributions.suffstats(::Type{<:Diffusion}, x::AbstractArray)
     n = length(x)
     r = 0.0
     for i = 1:n
         @inbounds r += x[i]^2
     end
-    DiffusionStats(r, Float64(n), 0.001, 0.03)
+    DiffusionStats(r, Float64(n), 0.022, 0.03)
 end
 
-function suffstats(d::Diffusion, x::AbstractArray)
+function Distributions.suffstats(d::Diffusion, x::AbstractArray)
     n = length(x)
     r = 0.0
     for i = 1:n
@@ -57,23 +57,23 @@ function suffstats(d::Diffusion, x::AbstractArray)
     DiffusionStats(r, Float64(n), d.δ, d.ϵ)
 end
 
-function suffstats(::Type{<:Diffusion}, x::AbstractArray{T}, w::AbstractArray{Float64}) where T <: Real
-    n = length(x)
-    if length(w) != n
-        throw(DimensionMismatch("Inconsistent argument dimensions."))
-    end
-    tw = w[1]
-    r = 0.0
-    for i = 1:n
-        @inbounds wi = w[i]
-        @inbounds xi = x[i]
-        r += wi * xi^2
-        tw += wi
-    end
-    DiffusionStats(r, tw, 1, 1)
-end
+# function suffstats(::Type{<:Diffusion}, x::AbstractArray{T}, w::AbstractArray{Float64}) where T <: Real
+#     n = length(x)
+#     if length(w) != n
+#         throw(DimensionMismatch("Inconsistent argument dimensions."))
+#     end
+#     tw = w[1]
+#     r = 0.0
+#     for i = 1:n
+#         @inbounds wi = w[i]
+#         @inbounds xi = x[i]
+#         r += wi * xi^2
+#         tw += wi
+#     end
+#     DiffusionStats(r, tw, , 1)
+# end
 
-function fit_mle(::Type{<:Diffusion}, ss::DiffusionStats)
+function Distributions.fit_mle(::Type{<:Diffusion}, ss::DiffusionStats)
 #     D = (ss.r - 4 * ss.w * ss.δ * ss.ϵ^2) / (4 * ss.w * ss.δ)
     D = ss.r/(4*ss.w*ss.δ) - ss.ϵ^2/ss.δ
     Diffusion(D, ss.δ, ss.ϵ)

@@ -18,6 +18,7 @@ using HypergeometricFunctions
 # using Ipopt
 # using Flux
 using Random
+using QHull
 # using JuMP
 
 
@@ -54,6 +55,7 @@ export
     # utilities.jl
     create_prior,
     preproccsing!,
+    add_noise!,
     # data2matrix,
     nomapround,
     label_mean_displacement!,
@@ -66,13 +68,12 @@ export
     # ctrw.jl
     ctrw,
     # dynamical_functional.jl
-    dynamical_functional
-
-
-
+    dynamical_functional,
+    # convex_hull.jl
+    convex_hull
 
 # 読み込みたいjlファイル
-include("angle.jl")
+# include("angle.jl")
 include("displacement.jl")
 include("mle.jl")
 include("msd.jl")
@@ -85,6 +86,7 @@ include("utilities.jl")
 include("velocity_autocorrelation.jl")
 include("preprocessing.jl")
 include("ergodicity_test.jl")
+include("convex_hull.jl")
 
 # To be removed in a future version
 # ---------------------------------

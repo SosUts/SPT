@@ -30,6 +30,38 @@ function preproccsing!(df::DataFrames.DataFrame)
     return track_length, track_num, max_length, start_point
 end
 
+function displacement(
+    df::DataFrame,
+    idlabel::Symbol = :TrackID,
+    xlabel::Symbol = :POSITION_X,
+    ylabel::Symbol = :POSITION_Y;
+    δ::Int = 1
+    )
+    dr = Float64[]
+    @inbounds for n in 1:maximum(df.TrackID)
+        m = Matrix(df[df[!, idlabel].== n, [xlabel, ylabel]])
+        @simd for t in 1:size(m, 1)-δ
+            append!(dr, displacement(m, t, δ))
+        end
+    end
+    dr
+end
+
+function displacement(r::AbstractMatrix, δ::Int)
+    sqrt((r[1+δ, 2] - r[1, 2])^2 + (r[1+δ, 1] - r[1, 1])^2)
+end
+
+function displacement(r::AbstractMatrix, t::Int, δ::Int)
+    sqrt((r[t+δ, 2] - r[t, 2])^2 + (r[t+δ, 1] - r[t, 1])^2)
+end
+
+function squared_displacement(
+    r::AbstractMatrix, t::Int, δ::Int
+    )
+    displacement(r, t, δ)^2
+end
+
+
 function data2matrix(
     df::DataFrame,
     track_num::Integer,
@@ -120,20 +152,6 @@ function label_mean_displacement!(
     return collect(bin_array)
 end
 
-function displacement(r::AbstractMatrix, δ::Int)
-    sqrt((r[1+δ, 2] - r[1, 2])^2 + (r[1+δ, 1] - r[1, 1])^2)
-end
-
-function displacement(r::AbstractMatrix, t::Int, δ::Int)
-    sqrt((r[t+δ, 2] - r[t, 2])^2 + (r[t+δ, 1] - r[t, 1])^2)
-end
-
-function squared_displacement(
-    r::AbstractMatrix, t::Int, δ::Int
-    )
-    displacement(r, t, δ)^2
-end
-
 function time_average(
         df::DataFrame,
         f::Function,
@@ -155,4 +173,15 @@ function time_average(
         end
     end
     result
+end
+
+function add_noise!(m)
+    @inbounds for t in 2:size(m, 1)
+        if m[t, 1] ≈ m[t-1, 1]
+            m[t, 1] += rand(Uniform(-1e-4, 1e-4))
+        end
+        if m[t, 2] ≈ m[t-1, 2]
+            m[t, 2] += rand(Uniform(-1e-4, 1e-4))
+        end
+    end
 end

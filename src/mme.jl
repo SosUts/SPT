@@ -49,7 +49,6 @@ function StatsBase.moment(
     @inbounds for id in sort(collect(Set(df.TrackID)))
         data = convert(Matrix, df[df.TrackID.==id, [xlabel, ylabel]])
         T = size(data, 1)
-        T = 100
         @inbounds for δ in 1:T-1
             c⁴ = 0.0
             c² = 0.0

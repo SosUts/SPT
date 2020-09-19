@@ -1,23 +1,35 @@
 function vacf(
         df::DataFrame,
+        xlabel,
+        ylabel,
+        idlabel,
         max_τ::Int,
         δ::Int,
     )
     N = maximum(df.TrackID)
     result = DataFrame(n = Int[], τ = Int[], value = Float64[])
     @inbounds for n in 1:N
-        data = Matrix(df[df.TrackID .== n, [:x, :]])
+        data = Matrix(df[df[!, idlabel].== n, [xlabel, ylabel]])
         T = size(data, 1)
-        @inbounds for τ in 0:max_τ
+        maxt = max_τ
+        # if T < 500
+        #     @show n
+        #     continue
+        # end
+        if T < max_τ
+            maxt = T
+        end
+        @inbounds for τ in 0:maxt-δ-1
             s = 0.0
-            count = 0
-            @simd for t in 1:(T-δ-max_τ)
+            # count = 0
+            @simd for t in 1:(T-δ-τ)
                 vₜ = velocity(data, t, δ)
                 v2 = velocity(data, t+τ, δ)
                 s += c(vₜ, v2)
-                count += 1
+                # count += 1
             end
-            s /= count
+            # s /= count
+            s /= (T-δ-τ)
             push!(result, [n, τ, s])
         end
     end
