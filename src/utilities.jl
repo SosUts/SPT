@@ -185,3 +185,13 @@ function add_noise!(m)
         end
     end
 end
+
+function extract(
+        df::DataFrame,
+        n::Int;
+        idlabel::Symbol = :TrackID,
+        xlabel::Symbol= :POSITION_X,
+        ylabel::Symbol = :POSITION_Y,
+    )
+    Matrix{Float64}(df[df[!, idlabel] .== n, [xlabel, ylabel]])
+end

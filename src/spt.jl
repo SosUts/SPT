@@ -70,7 +70,9 @@ export
     # dynamical_functional.jl
     dynamical_functional,
     # convex_hull.jl
-    convex_hull
+    convex_hull,
+    # gyration.jl
+    gyration
 
 # 読み込みたいjlファイル
 # include("angle.jl")
@@ -87,6 +89,7 @@ include("velocity_autocorrelation.jl")
 include("preprocessing.jl")
 include("ergodicity_test.jl")
 include("convex_hull.jl")
+include("gyration.jl")
 
 # To be removed in a future version
 # ---------------------------------
