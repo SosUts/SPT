@@ -1,21 +1,17 @@
 function vacf(
         df::DataFrame,
+        idlabel::Symbol,
         xlabel::Symbol,
         ylabel::Symbol,
-        idlabel::Symbol,
         max_τ::Int,
         δt::Int,
     )
-    N = maximum(df.TrackID)
     result = DataFrame(n = Int[], τ = Int[], value = Float64[])
     @inbounds for n in 1:maximum(df[!, idlabel])
-        data = Matrix(df[df[!, idlabel] .== n, [xlabel, ylabel]])
+        data = extract(df, n, idlabel = idlabel, xlabel = xlabel, ylabel = ylabel)
         T = size(data, 1)
-        # maxt = max_τ
-        # if T < max_τ
-        #     maxt = T
-        # end
-        @inbounds for τ in 0:max_τ-δt
+        T < max_τ ? maxt = T : maxt = max_τ
+        @inbounds for τ in 0:maxt-δt-1
             s = 0.0
             @simd for t in 1:(T-δt-τ)
                 vₜ = velocity(data, t, δt)
