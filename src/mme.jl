@@ -1,13 +1,21 @@
-function mean_maximal_excursion(
-    r::AbstractMatrix,
-    τ::Integer,
-    k::Integer
-    )
-    @argcheck (k >= 1)&&(τ >= 0)
+function displacement(r::AbstractMatrix, δ::Int)
+    sqrt((r[1+δ, 2] - r[1, 2])^2 + (r[1+δ, 1] - r[1, 1])^2)
+end
+
+function displacement(r::AbstractMatrix, t::Int, δ::Int)
+    sqrt((r[t+δ, 2] - r[t, 2])^2 + (r[t+δ, 1] - r[t, 1])^2)
+end
+
+function squared_displacement(r::AbstractMatrix, t::Int, δ::Int)
+    displacement(r, t, δ)^2
+end
+
+function mean_maximal_excursion(r::AbstractMatrix, τ::Integer, k::Integer)
+    @argcheck (k >= 1) && (τ >= 0)
     @argcheck size(r, 1) >= 2
     T = size(r, 1)
     m = displacement(r, 1)
-    @inbounds for δt in 1:τ
+    @inbounds for δt = 1:τ
         mₜ = displacement(r, δt)
         if mₜ > m
             m = mₜ
@@ -16,16 +24,16 @@ function mean_maximal_excursion(
     m^k
 end
 
-function calc_mme(
+function mme(
     df::DataFrame,
-    idlabel::Symbol,
-    xlabel::Symbol,
-    ylabel::Symbol,
-    )
+    id::Symbol = :TrackID,
+    x::Symbol = :POSITION_X,
+    y::Symbol = :POSITION_Y,
+)
     result = DataFrame(n = Int[], τ = Int[], m1 = Float64[])
-    @inbounds for n in 1:maximum(df[!, idlabel])
-        m = Matrix(df[df[!, idlabel].== n, [xlabel, ylabel]])
-        @simd for τ in 1:size(m, 1)-1
+    @inbounds for n = 1:maximum(df[!, id])
+        m = data = extract(df, n, id, x, y)
+        @simd for τ = 1:size(m, 1)-1
             m1 = mean_maximal_excursion(m, τ, 1)
             push!(result, [n, τ, m1])
         end
@@ -35,9 +43,9 @@ end
 
 function StatsBase.moment(
     df::DataFrame,
-    idlabel::Symbol,
-    xlabel::Symbol,
-    ylabel::Symbol
+    id::Symbol = :TrackID,
+    x::Symbol = :POSITION_X,
+    y::Symbol = :POSITION_Y,
 )
     result = DataFrame(
         TrackID = Int64[],
@@ -46,19 +54,19 @@ function StatsBase.moment(
         delta_t = Int64[],
         n = Int64[],
     )
-    @inbounds for id in sort(collect(Set(df.TrackID)))
-        data = convert(Matrix, df[df.TrackID.==id, [xlabel, ylabel]])
+    @inbounds for n in sort(collect(Set(df[!, id])))
+        data = extract(df, n, id, x, y)
         T = size(data, 1)
-        @inbounds for δ in 1:T-1
+        @inbounds for δ = 1:T-1
             c⁴ = 0.0
             c² = 0.0
-            @inbounds for t in 1:(T-δ)
+            @inbounds for t = 1:(T-δ)
                 c⁴ += spt.displacement(data, t, δ)^4
                 c² += spt.displacement(data, t, δ)^2
             end
-            c⁴ /= (T-δ)
-            c² /= (T-δ)
-            push!(result, [id, c⁴, c², δ, T-δ])
+            c⁴ /= (T - δ)
+            c² /= (T - δ)
+            push!(result, [n, c⁴, c², δ, T - δ])
         end
     end
     result

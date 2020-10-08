@@ -19,13 +19,15 @@ using HypergeometricFunctions
 # using Flux
 using Random
 using QHull
+using DataFramesMeta
 # using JuMP
 
 
 import Random: AbstractRNG, GLOBAL_RNG
 import StatsBase: sem
-import Distributions: quantile, minimum, maximum, pdf, cdf, rand, logpdf, @check_args, @distr_support
-import MLJBase:int
+import Distributions:
+    quantile, minimum, maximum, pdf, cdf, rand, logpdf, @check_args, @distr_support
+import MLJBase: int
 
 # exportしたい関数一覧
 export
@@ -72,11 +74,20 @@ export
     # convex_hull.jl
     convex_hull,
     # gyration.jl
-    gyration
+    gyration,
+    # mme.jl
+    mme,
+    moment,
+    displacement,
+    squared_displacement,
+    # ergodicity_test.jl
+    dynamical_functional,
+    mean_df
 
 # 読み込みたいjlファイル
 # include("angle.jl")
 include("displacement.jl")
+include("angle.jl")
 include("mle.jl")
 include("msd.jl")
 include("ctrw.jl")
@@ -94,7 +105,7 @@ include("gyration.jl")
 # To be removed in a future version
 # ---------------------------------
 # export
-    # n_parameters,
+# n_parameters,
 
 # @deprecate n_parameters(hmm) nparams(hmm)
 

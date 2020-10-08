@@ -12,58 +12,44 @@ using SPT
 """
 function ensemble_time_average_msd(
     df::DataFrame,
-    xlabel::Symbol,
-    ylabel::Symbol;
-    return_tamsd::Bool = false
-    )
-    ta_msd = time_average_msd(df, xlabel, ylabel)
+    id::Symbol,
+    x::Symbol,
+    y::Symbol;
+    return_tamsd::Bool = false,
+)
+    ta_msd = time_average_msd(df, id, x, y)
     return_tamsd ? (ensemble_tamsd(ta_msd), ta_msd) : ensemble_tamsd(ta_msd)
 end
 
 function time_average_msd(
     df::DataFrame,
-    xlabel::Symbol,
-    ylabel::Symbol
-    )
-    tamsd = DataFrame(
-        TrackID = Int64[],
-        msd = Float64[],
-        delta_t = Int64[],
-        n = Int64[],
-    )
-    @inbounds for id in sort(collect(Set(df.TrackID)))
-        data = convert(Matrix, df[df.TrackID.==id, [xlabel, ylabel]])
+    id::Symbol = :TrackID,
+    x::Symbol = :POSITION_X,
+    y::Symbol = :POSITION_Y,
+)
+    tamsd = DataFrame(TrackID = Int64[], msd = Float64[], delta_t = Int64[], n = Int64[])
+    @inbounds for n in sort(collect(Set(df[!, id])))
+        data = extract(df, n, id, x, y)
         T = size(data, 1)
-        @inbounds for δ in 1:T-1
+        @inbounds for δ = 1:T-1
             c = 0.0
-            @inbounds for t in 1:(T-δ)
+            @inbounds for t = 1:(T-δ)
                 c += squared_displacement(data, t, δ)
             end
-            c /= (T-δ)
-            push!(tamsd, [id, c, δ, T-δ])
+            c /= (T - δ)
+            push!(tamsd, [n, c, δ, T - δ])
         end
     end
     tamsd
 end
 
-function ensemble_msd(
-    df::DataFrame,
-    xlabel::Symbol,
-    ylabel::Symbol
-    )
-    eamsd = DataFrame(
-        TrackID = Int64[],
-        msd = Float64[],
-        n = Int[],
-        delta_t = Int64[]
-    )
-    @inbounds for id in sort(collect(Set(df.TrackID)))
-        data = convert(Matrix, df[df.TrackID.==id, [xlabel, ylabel]])
+function ensemble_msd(df::DataFrame, id::Symbol, x::Symbol, y::Symbol)
+    eamsd = DataFrame(TrackID = Int64[], msd = Float64[], n = Int[], delta_t = Int64[])
+    @inbounds for n in sort(collect(Set(df[!, id])))
+        data = extract(df, n, id, x, y)
         T = size(data, 1)
-        @inbounds for δ in 1:T-1
-            push!(eamsd,
-            [id, squared_displacement(data, 1, δ), 1, δ]
-            )
+        @inbounds for δ = 1:T-1
+            push!(eamsd, [n, squared_displacement(data, 1, δ), 1, δ])
         end
     end
     eamsd
@@ -75,16 +61,11 @@ function ensemble_tamsd(df::DataFrame)
         msd = Float64[],
         n = Int64[],
         std = Float64[],
-        sem = Float64[]
+        sem = Float64[],
     )
     @inbounds @simd for i = 1:maximum(df.delta_t)
-        data = df[df.delta_t .== i, :]
-        push!(
-            eatamsd, [
-                i, mean(data.msd), sum(data.n),
-                std(data.msd), sem(data.msd)
-            ],
-        )
+        data = df[df.delta_t.==i, :]
+        push!(eatamsd, [i, mean(data.msd), sum(data.n), std(data.msd), sem(data.msd)])
     end
     eatamsd
 end
@@ -93,21 +74,25 @@ function fit_msd(
     df;
     max_time::Int64 = 10,
     loc_error::Float64 = 0.03,
-    p0::AbstractVector = [0.5, 0.5]
-    )
+    p0::AbstractVector = [0.5, 0.5],
+)
     @argcheck loc_error >= 0.0
     @. model(x, p) = 4 * p[1] * x^p[2] + 4 * loc_error^2
     fit = curve_fit(
-        model, df.delta_t[1:max_time].*(1/45),
-        df.msd[1:max_time], p0, lower=[0.0, 0.0], upper=[10.0, 2.0]
-        )
+        model,
+        df.delta_t[1:max_time] .* (1 / 45),
+        df.msd[1:max_time],
+        p0,
+        lower = [0.0, 0.0],
+        upper = [10.0, 2.0],
+    )
     fit.param
 end
 
 function fit_msd(df::DataFrame, δ::Int)
     @argcheck δ >= 1
     # @argcheck method in [:arithmetic, :geometric]
-    log(mean(df[df.delta_t .== δ, :msd])/mean(df[df.delta_t .== 1, :msd]))/log(δ/1)
+    log(mean(df[df.delta_t.==δ, :msd]) / mean(df[df.delta_t.==1, :msd])) / log(δ / 1)
 end
 
 function plot_msd(grouped_df; maxt = 10, save_fig = false)

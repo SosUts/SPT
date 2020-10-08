@@ -37,11 +37,16 @@ struct HMM{F,T} <: AbstractHMM{F}
     a::Vector{T}
     A::Matrix{T}
     B::Vector{Distribution{F}}
-    HMM{F,T}(a, A, B) where {F,T} = assert_hmm(a, A, B) && new(a, A, B) 
+    HMM{F,T}(a, A, B) where {F,T} = assert_hmm(a, A, B) && new(a, A, B)
 end
 
-HMM(a::AbstractVector{T}, A::AbstractMatrix{T}, B::AbstractVector{<:Distribution{F}}) where {F,T} = HMM{F,T}(a, A, B)
-HMM(A::AbstractMatrix{T}, B::AbstractVector{<:Distribution{F}}) where {F,T} = HMM{F,T}(ones(size(A)[1])/size(A)[1], A, B)
+HMM(
+    a::AbstractVector{T},
+    A::AbstractMatrix{T},
+    B::AbstractVector{<:Distribution{F}},
+) where {F,T} = HMM{F,T}(a, A, B)
+HMM(A::AbstractMatrix{T}, B::AbstractVector{<:Distribution{F}}) where {F,T} =
+    HMM{F,T}(ones(size(A)[1]) / size(A)[1], A, B)
 
 """
     assert_hmm(a, A, B)
@@ -49,13 +54,11 @@ HMM(A::AbstractMatrix{T}, B::AbstractVector{<:Distribution{F}}) where {F,T} = HM
 Throw an `ArgumentError` if the initial state distribution and the transition matrix rows does not sum to 1,
 and if the observation distributions do not have the same dimensions.
 """
-function assert_hmm(a::AbstractVector, 
-                    A::AbstractMatrix, 
-                    B::AbstractVector{<:Distribution})
+function assert_hmm(a::AbstractVector, A::AbstractMatrix, B::AbstractVector{<:Distribution})
     @argcheck isprobvec(a)
     @argcheck istransmat(A)
     @argcheck all(length.(B) .== length(B[1])) ArgumentError("All distributions must have the same dimensions")
-    @argcheck length(a) == size(A,1) == length(B)
+    @argcheck length(a) == size(A, 1) == length(B)
     return true
 end
 
@@ -64,53 +67,49 @@ end
 
 Return true if `A` is a square matrix.
 """
-issquare(A::AbstractMatrix) = size(A,1) == size(A,2)
+issquare(A::AbstractMatrix) = size(A, 1) == size(A, 2)
 
 """
     istransmat(A) -> Bool
 
 Return true if `A` is square and its rows sums to 1.
 """
-istransmat(A::AbstractMatrix) = issquare(A) && all([isprobvec(A[i,:]) for i in 1:size(A,1)])
+istransmat(A::AbstractMatrix) =
+    issquare(A) && all([isprobvec(A[i, :]) for i = 1:size(A, 1)])
 
-isequal(h1::AbstractHMM, h2::AbstractHMM) = (h1.a == h2.a) && (h1.A == h2.A) && (h1.B == h2.B)
+isequal(h1::AbstractHMM, h2::AbstractHMM) =
+    (h1.a == h2.a) && (h1.A == h2.A) && (h1.B == h2.B)
 
 function rand(
     rng::AbstractRNG,
     hmm::AbstractHMM{Univariate},
     z::AbstractArray{<:Integer},
     T::Integer,
-    N::Integer;
+    N::Integer;,
 )
-y = Array{Float64}(undef, size(z, 1), size(z, 2))
-for n in 1:N
-    for t in 1:T
-        y[t, n] = rand(rng, hmm.B[z[t]])
+    y = Array{Float64}(undef, size(z, 1), size(z, 2))
+    for n = 1:N
+        for t = 1:T
+            y[t, n] = rand(rng, hmm.B[z[t]])
+        end
     end
-end
-y
+    y
 end
 
-function rand(
-    rng::AbstractRNG,
-    hmm::AbstractHMM,
-    T::Integer,
-    N::Integer;
-    seq = false,
-)
-z = Matrix{Int}(undef, T, N)
-for n = 1:N
-    z[1, n] = rand(rng, Categorical(hmm.a))
-    for t = 2:T
-        z[t, n] = rand(rng, Categorical(hmm.A[z[t-1, n], :]))
+function rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer, N::Integer; seq = false)
+    z = Matrix{Int}(undef, T, N)
+    for n = 1:N
+        z[1, n] = rand(rng, Categorical(hmm.a))
+        for t = 2:T
+            z[t, n] = rand(rng, Categorical(hmm.A[z[t-1, n], :]))
+        end
     end
-end
-y = rand(rng, hmm, z, T, N)
-seq ? (z, y) : y
+    y = rand(rng, hmm, z, T, N)
+    seq ? (z, y) : y
 end
 
 Base.rand(hmm::AbstractHMM, T::Integer, N::Integer; kwargs...) =
-rand(GLOBAL_RNG, hmm, T, N; kwargs...)
+    rand(GLOBAL_RNG, hmm, T, N; kwargs...)
 
 Base.rand(hmm::AbstractHMM, z::AbstractArray{<:Integer}) =
-rand(GLOBAL_RNG, hmm, size(z, 1), size(z, 2))
+    rand(GLOBAL_RNG, hmm, size(z, 1), size(z, 2))

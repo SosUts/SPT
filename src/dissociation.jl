@@ -1,11 +1,8 @@
 function dissociation_calculation(df::DataFrame)
-    result = DataFrame(
-        delta_t = Float64[],
-        dissociation_rate = Float64[]
-    )
+    result = DataFrame(delta_t = Float64[], dissociation_rate = Float64[])
     tmp_df = tmp_df = df[df.frame_num.==2, :]
-    for i in 1:maximum(df.lifetime)
-        delta_t = i*(1/45)
+    for i = 1:maximum(df.lifetime)
+        delta_t = i * (1 / 45)
         rate = nrow(tmp_df[tmp_df.lifetime.==i, :])
         push!(result, [delta_t, rate])
     end
