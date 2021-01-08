@@ -5,7 +5,6 @@ using Clustering
 using CSV
 using DataFrames
 using Distributions
-# using HMMBase
 using LinearAlgebra
 using LsqFit
 using PyPlot
@@ -13,14 +12,10 @@ using Statistics
 using StatsBase
 using Glob
 using HypergeometricFunctions
-# using LaTeXStrings
 # using JuMP
-# using Ipopt
-# using Flux
 using Random
 using QHull
 using DataFramesMeta
-# using JuMP
 
 
 import Random: AbstractRNG, GLOBAL_RNG
@@ -82,7 +77,9 @@ export
     squared_displacement,
     # ergodicity_test.jl
     dynamical_functional,
-    mean_df
+    ergodicity_estimator,
+    # features.jl
+    asymmetry
 
 # 読み込みたいjlファイル
 # include("angle.jl")
@@ -101,6 +98,7 @@ include("preprocessing.jl")
 include("ergodicity_test.jl")
 include("convex_hull.jl")
 include("gyration.jl")
+include("features.jl")
 
 # To be removed in a future version
 # ---------------------------------

@@ -13,19 +13,19 @@ function velocity(data::AbstractVector, n::Int)
 end
 
 # n（タイムラグ）
-function _dynamical_functional(data::AbstractVector, n::Int, ω::Int)
+function _dynamical_functional(data::AbstractVector, n::Int, ω)
     @argcheck (n >= 1) && (ω >= 0)
     T = length(data)
 
     e1 = 0.0
     @inbounds for k = 1:(T-n) # kは開始地点
-        e1 += exp(ω * im * (data[k+n] - data[k]))
+        @views e1 += exp(ω * im * (data[k+n] - data[k]))
     end
     e1 /= (T - n)
 
     e2 = 0.0
     @inbounds for k = 1:T
-        e2 += exp(ω * im * (data[k] - data[1]))
+        @views e2 += exp(ω * im * (data[k] - data[1]))
     end
     e2 = abs2(e2) / (T * (T - 1))
     e1 - e2 + (1 / (T + 1))
@@ -34,46 +34,31 @@ end
 function dynamical_functional(
     df::DataFrame,
     id::Symbol = :TrackID,
-    x::Symbol = :POSITION_X,
-    frame::Symbol = :FRAME2;
-    ω::Int = 1,
+    x::Symbol = :POSITION_X;
+    # frame::Symbol = :FRAME2;
+    ω = 1,
 )
     N = maximum(df[!, id])
-    T = Int(maximum(df[!, frame])) - 1
-    # T = 1000-1
-    e_real = Matrix{Union{Float64,Nothing}}(nothing, T, N)
-    e_im = Matrix{Union{Float64,Nothing}}(nothing, T, N)
-    f_real = Matrix{Union{Float64,Nothing}}(nothing, T, N)
-    f_im = Matrix{Union{Float64,Nothing}}(nothing, T, N)
+    # T = Int(maximum(df[!, frame])) - 1
+    T = 1000-1
+    E = Matrix{Union{ComplexF64,Nothing}}(nothing, T, N)
     @inbounds for n = 1:N
         data = spt.extract(df, n, id, x)
-        _T = size(data, 1) - 1
-        if _T > 45
-            continue
-        end
-        e = Vector{Complex}(undef, _T)
-        f = Vector{Complex}(undef, _T)
+        _T = size(data, 1)-1
         @simd for t = 1:_T
-            e[t] = spt._dynamical_functional(data, t, ω)
-        end
-        @simd for t = 1:_T
-            f[t] = mean(e[1:t])
-        end
-        @simd for t = 1:_T
-            e_real[t, n] = reim(e[t])[1]
-            e_im[t, n] = reim(e[t])[2]
-            f_real[t, n] = reim(f[t])[1]
-            f_im[t, n] = reim(f[t])[2]
+            E[t, n] = spt._dynamical_functional(data, t, ω)
         end
     end
-    return e_real, e_im, f_real, f_im
+    E
 end
 
-function mean_df(x)
-    T = size(x, 1)
-    result = Vector{Float64}(undef, T)
-    @inbounds @simd for t = 1:T
-        result[t] = mean(filter(!isnothing, x[t, :]))
+function ergodicity_estimator(E)
+    T, N = size(E)
+    F = Matrix{Union{ComplexF64,Nothing}}(nothing, T, N)
+    @inbounds for n = 1:N
+        @views @simd for t = 1:size(filter(!isnothing, E[:, n]), 1)
+            @views F[t, n] = sum(E[1:t, n])/t
+        end
     end
-    result
+    F
 end

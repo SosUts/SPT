@@ -29,15 +29,15 @@ function time_average_msd(
 )
     tamsd = DataFrame(TrackID = Int64[], msd = Float64[], delta_t = Int64[], n = Int64[])
     @inbounds for n in sort(collect(Set(df[!, id])))
-        data = extract(df, n, id, x, y)
+        data = extract(df, Int(n), id, [x, y])
         T = size(data, 1)
-        @inbounds for δ = 1:T-1
-            c = 0.0
-            @inbounds for t = 1:(T-δ)
-                c += squared_displacement(data, t, δ)
+        for δ = 1:T-1
+            r² = 0.0
+            @simd for t = 1:(T-δ)
+                r² += squared_displacement(data, t, δ)
             end
-            c /= (T - δ)
-            push!(tamsd, [n, c, δ, T - δ])
+            r² /= (T - δ)
+            push!(tamsd, [n, r², δ, T - δ])
         end
     end
     tamsd
@@ -46,9 +46,9 @@ end
 function ensemble_msd(df::DataFrame, id::Symbol, x::Symbol, y::Symbol)
     eamsd = DataFrame(TrackID = Int64[], msd = Float64[], n = Int[], delta_t = Int64[])
     @inbounds for n in sort(collect(Set(df[!, id])))
-        data = extract(df, n, id, x, y)
+        data = extract(df, Int(n), id, [x, y])
         T = size(data, 1)
-        @inbounds for δ = 1:T-1
+        @simd for δ = 1:T-1
             push!(eamsd, [n, squared_displacement(data, 1, δ), 1, δ])
         end
     end
@@ -89,11 +89,12 @@ function fit_msd(
     fit.param
 end
 
-function fit_msd(df::DataFrame, δ::Int)
-    @argcheck δ >= 1
-    # @argcheck method in [:arithmetic, :geometric]
-    log(mean(df[df.delta_t.==δ, :msd]) / mean(df[df.delta_t.==1, :msd])) / log(δ / 1)
+function fit_msd(df::DataFrame, δ1::Int, δ2::Int)
+    @argcheck 1 <= δ2 <= δ1
+    log(mean(df[df.delta_t.==δ1, :msd]) / mean(df[df.delta_t.==δ2, :msd])) / log(δ1 / δ2)
 end
+
+fit_msd(df::DataFrame, δ::Int) = fit_msd(df::DataFrame, δ, 1)
 
 function plot_msd(grouped_df; maxt = 10, save_fig = false)
     for i = 1:length(grouped_df)

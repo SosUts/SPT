@@ -54,17 +54,18 @@ function fit_baumwelch(
         D = reshape(
             sum(abs2.(observations) .* γ , dims=(1,3)) ./ (sum(γ, dims=(1,3)) .* (4dt)),
             K) .- er^2/dt
+        # @show D
         if any(x -> x <= 0, D)
-            println("D <= 0")
+            # println("D <= 0")
             for j in 1:K
                 if D[j] <= 0
-                    D[j] =
-                    example_mle(
-                        observations, track_length, track_num, γ, dt, er, j
-                        )
+                    D[j] = 0.001
+        #             D[j] =
+        #             example_mle(
+        #                 observations, track_length, track_num, γ, dt, er, j
+        #                 )
                 end
             end
-            break
         end
         A = reshape(sum(ξ, dims=(1, 4)), K,K) ./ sum(reshape(sum(ξ, dims=(1, 4)), K,K), dims=2)
         l = sum(filter(!isinf, log.(c)))

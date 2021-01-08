@@ -15,17 +15,17 @@ function preproccsing!(df::DataFrames.DataFrame)
     df[!, :dY] .= 0.0
     df.dX[2:end] .= diff(df.corrected_x)
     df.dY[2:end] .= diff(df.corrected_y)
-    df[df.New_Frame.==0, [:dX, :dY]] .= NaN
+    df[df.FRAME2.==1, [:dX, :dY]] .= NaN
     df.dR2 = abs2.(df.dX) + abs2.(df.dY)
     df.dR = sqrt.(df.dR2)
-    start_point = findall(x -> x == 1, df.New_Frame)
+    start_point = findall(x -> x == 2, df.FRAME2)
     end_point = start_point[2:end] .- 2
     terminus = size(df, 1)
     append!(end_point, terminus)
     track_length = Integer[]
     track_length = end_point .- start_point .+ 1
     track_num = maximum(df.TrackID)
-    max_length = Int64(maximum(df.New_Frame))
+    max_length = Int64(maximum(df.FRAME2))
 
     return track_length, track_num, max_length, start_point
 end
@@ -33,13 +33,14 @@ end
 function displacement(
     df::DataFrame,
     id::Symbol = :TrackID,
-    xlabel::Symbol = :POSITION_X,
-    ylabel::Symbol = :POSITION_Y;
+    x::Symbol = :POSITION_X,
+    y::Symbol = :POSITION_Y;
     δ::Int = 1,
 )
     dr = Float64[]
-    @inbounds for n = 1:maximum(df.TrackID)
-        m = Matrix(df[df[!, id].==n, [xlabel, ylabel]])
+    @inbounds for n = 1:maximum(df[!, id])
+        m = extract(df, n, id, [x, y])
+        # m = Matrix(df[df[!, id].==n, [xlabel, ylabel]])
         @simd for t = 1:size(m, 1)-δ
             append!(dr, displacement(m, t, δ))
         end
@@ -64,17 +65,30 @@ function data2matrix(
     data
 end
 
-function data2matrix(df::DataFrame)
-    N = maximum(df.TrackID)
-    data = Matrix{Union{Nothing,Float64}}(nothing, maximum(df.t), N)
-    for n = 1:N
-        tmp_data = filter(!isnan, df[df.TrackID.==n, :dr])
-        T = length(tmp_data)
-        for t = 1:T
-            data[t, n] = tmp_data[t]
+function dr2matrix(df, id, data, frame)
+    N = maximum(df[!, id])
+    dr = Matrix{Union{Nothing,Float64}}(nothing, maximum(df[!, frame]), N)
+    @inbounds for n = 1:N
+        m = filter(!isnan, df[df[!, id] .== n, data])
+        @simd for t = 1:length(m)
+            dr[t, n] = m[t]
         end
     end
-    data
+    dr
+end
+
+function xy2matrix(df, id, x, y, frame)
+    N = maximum(df[!, id])
+    xy = Array{Union{Nothing,Float64}}(nothing, maximum(df[!, frame]), 2, N + 1 - minimum(df[!, id]))
+    @inbounds for (n, i) = enumerate(minimum(df[!, id]):maximum(df[!, id]))
+    # @inbounds for n = minimum(df[!, id]):N
+        m = extract(df, i, id, [x, y])
+        @simd for t = 1:size(m, 1)
+            xy[t, 1, n] = m[t, 1]
+            xy[t, 2, n] = m[t, 2]
+        end
+    end
+    xy
 end
 
 function create_prior(df::DataFrames.DataFrame, K::Integer, dt::Float64, er::Float64)
@@ -158,8 +172,14 @@ function time_average(df::DataFrame, f::Function, id::Symbol, datalabel)
     result
 end
 
+"""
+    add_noise!(m) -> Matrix
+Update m by adding a random uniform noise(± 1e-4), if m[t, (1 or 2)] ≈ ,[t-1, (1 or 2)].
+This is needed when diff(coordinates) == 0 cause an error.
+```
+"""
 function add_noise!(m)
-    @inbounds for t = 2:size(m, 1)
+    @inbounds @simd for t = 2:size(m, 1)
         if m[t, 1] ≈ m[t-1, 1]
             m[t, 1] += rand(Uniform(-1e-4, 1e-4))
         end
@@ -169,12 +189,16 @@ function add_noise!(m)
     end
 end
 
-function extract(df::DataFrame, n::Int, id::Symbol, x::Symbol, y::Symbol)
-    Matrix(@where(df, cols(id) .== n)[!, [x, y]])
-    # Matrix{Float64}(df[df[:, id] .== n, [x, y]])
-end
-
 function extract(df::DataFrame, n::Int, id::Symbol, x::Symbol)
     Vector(@where(df, cols(id) .== n)[!, x])
     # Vector{Float64}(df[df[:, id] .== n, x])
+end
+
+function extract(df::DataFrame, n::Int, id::Symbol, label::Vector{Symbol})
+    Matrix(@where(df, cols(id) .== n)[!, label])
+end
+
+# https://discourse.julialang.org/t/a-good-way-to-filter-an-array-with-keeping-its-dimension/42603
+function remove_nothing(x::AbstractArray)
+    x[.!any.(isnothing, eachrow(x)), :]
 end

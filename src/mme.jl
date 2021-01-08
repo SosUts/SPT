@@ -32,7 +32,7 @@ function mme(
 )
     result = DataFrame(n = Int[], τ = Int[], m1 = Float64[])
     @inbounds for n = 1:maximum(df[!, id])
-        m = data = extract(df, n, id, x, y)
+        m = extract(df, n, id, [x, y])
         @simd for τ = 1:size(m, 1)-1
             m1 = mean_maximal_excursion(m, τ, 1)
             push!(result, [n, τ, m1])
@@ -55,14 +55,14 @@ function StatsBase.moment(
         n = Int64[],
     )
     @inbounds for n in sort(collect(Set(df[!, id])))
-        data = extract(df, n, id, x, y)
-        T = size(data, 1)
-        @inbounds for δ = 1:T-1
+        m = extract(df, n, id, [x, y])
+        T = size(m, 1)
+        for δ = 1:T-1
             c⁴ = 0.0
             c² = 0.0
-            @inbounds for t = 1:(T-δ)
-                c⁴ += spt.displacement(data, t, δ)^4
-                c² += spt.displacement(data, t, δ)^2
+            @simd for t = 1:(T-δ)
+                c⁴ += abs2(abs2(displacement(m, t, δ)))
+                c² += squared_displacement(m, t, δ)
             end
             c⁴ /= (T - δ)
             c² /= (T - δ)
