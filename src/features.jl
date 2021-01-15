@@ -32,6 +32,7 @@ end
 
 function non_gaussian_parameter(df, x, frame=:FRAME2)
     Δ = diff(df[!, x])
+    prepend!(Δ, NaN)
     Δ[findall(x -> x == 1, df[!, frame])] .= NaN
     filter!(!isnan, Δ)
     a = mean(Δ.^4)
