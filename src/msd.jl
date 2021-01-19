@@ -28,7 +28,7 @@ function time_average_msd(
     y::Symbol = :POSITION_Y,
 )
     tamsd = DataFrame(TrackID = Int64[], msd = Float64[], delta_t = Int64[], n = Int64[])
-    @inbounds for n in sort(collect(Set(df[!, id])))
+    @inbounds Threads.@threads for n in sort(collect(Set(df[!, id])))
         data = extract(df, Int(n), id, [x, y])
         T = size(data, 1)
         for δ = 1:T-1
@@ -45,7 +45,7 @@ end
 
 function ensemble_msd(df::DataFrame, id::Symbol, x::Symbol, y::Symbol)
     eamsd = DataFrame(TrackID = Int64[], msd = Float64[], n = Int[], delta_t = Int64[])
-    @inbounds for n in sort(collect(Set(df[!, id])))
+    @inbounds Threads.@threads for n in sort(collect(Set(df[!, id])))
         data = extract(df, Int(n), id, [x, y])
         T = size(data, 1)
         @simd for δ = 1:T-1
@@ -63,7 +63,7 @@ function ensemble_tamsd(df::DataFrame)
         std = Float64[],
         sem = Float64[],
     )
-    @inbounds @simd for i = 1:maximum(df.delta_t)
+    @inbounds Threads.@threads for i = 1:maximum(df.delta_t)
         data = df[df.delta_t.==i, :]
         push!(eatamsd, [i, mean(data.msd), sum(data.n), std(data.msd), sem(data.msd)])
     end

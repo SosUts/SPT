@@ -15,37 +15,34 @@ function fit_baumwelch(
         )
     @argcheck maxiter >= 0
 
-    iteration::Integer = 0
+    iteration::Int = 0
     l::Float64 = 0.0
     ϵ::Float64 = 100.0
-    track_length, track_num, max_length, start_point = preproccsing!(df);
-    observations = data2matrix(
-        df, track_num, max_length, track_length,
-        K, start_point
-        )
-    T, K, N = size(observations)
+    track_length, track_num, max_length, start_point = preproccsing!(df)
+    observations = dr2matrix(df, idlabel, datalabel, framelabel)
     a, A, D = create_prior(df, K, dt, er)
-    α = zeros(Float64, (T, K, N))
-    β = zeros(Float64, (T, K, N))
-    γ = zeros(Float64, (T, K, N))
-    ξ = zeros(Float64, (T, K, K, N))
-    c = zeros(Float64, (T, N))
-    L = zeros(Float64, (T, K, N))
+
+    c = Matrix{Union{Nothing, Float64}}(undef, T, N)
+    α = Array{Union{Nothing, Float64}}(undef, T, K, N)
+    β = Array{Union{Nothing, Float64}}(undef, T, K, N)
+    γ = Array{Union{Nothing, Float64}}(undef, T, K, N)
+    ξ = Array{Union{Nothing, Float64}}(undef, T, K, K, N)
+    LL = Array{Union{Nothing, Float64}}(undef, T, K, N)
 
     while ϵ > tol
         pl = l
-        fill!(α, 0.0)
-        fill!(β, 0.0)
-        fill!(γ, 0.0)
-        fill!(ξ, 0.0)
-        fill!(c, 0.0)
-        fill!(L, 0.0)
+        fill!(α, nothing)
+        fill!(β, nothing)
+        fill!(γ, nothing)
+        fill!(ξ, nothing)
+        fill!(c, nothing)
+        fill!(L, nothing)
 
         d = Diffusion.(D, dt, er)
-        likelihood!(observations, L, D, dt, er, track_length)
+        loglikelihoods!(L, observations, d)
 
         @inbounds for n in 1:N
-            forward!(α, c, a, A, L, n, track_length)
+            forward!(α, c, a, A, L, n)
             backward!(β, c, A, L, n, track_length)
             posterior!(γ, α, β, L ,n, track_length)
             update_ξ!(ξ, α, β, c, A, L, n, track_length)
@@ -54,19 +51,19 @@ function fit_baumwelch(
         D = reshape(
             sum(abs2.(observations) .* γ , dims=(1,3)) ./ (sum(γ, dims=(1,3)) .* (4dt)),
             K) .- er^2/dt
-        # @show D
-        if any(x -> x <= 0, D)
-            # println("D <= 0")
-            for j in 1:K
-                if D[j] <= 0
-                    D[j] = 0.001
-        #             D[j] =
-        #             example_mle(
-        #                 observations, track_length, track_num, γ, dt, er, j
-        #                 )
-                end
-            end
-        end
+        # if any(x -> x <= 0, D)
+        #     # println("D <= 0")
+        #     for j in 1:K
+        #         if D[j] <= 0
+        #             D[j] = 1e-5
+        # #             D[j] =
+        # #             example_mle(
+        # #                 observations, track_length, track_num, γ, dt, er, j
+        # #                 )
+        #         end
+        #     end
+        # end
+        @show D
         A = reshape(sum(ξ, dims=(1, 4)), K,K) ./ sum(reshape(sum(ξ, dims=(1, 4)), K,K), dims=2)
         l = sum(filter(!isinf, log.(c)))
 

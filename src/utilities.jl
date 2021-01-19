@@ -1,15 +1,3 @@
-function add_dR!(df::DataFrame)
-    df[!, :dX] .= prepend!(diff(df.POSITION_X), NaN)
-    df[!, :dY] .= prepend!(diff(df.POSITION_Y), NaN)
-    df[!, :corrected_dX] .= prepend!(diff(df.corrected_x), NaN)
-    df[!, :corrected_dY] .= prepend!(diff(df.corrected_y), NaN)
-    df[df.New_Frame.==1, [:dX, :dY, :corrected_dX, :corrected_dY]] .= NaN
-    df.dR2 = abs2.(df.dX) + abs2.(df.dY)
-    df.dR = sqrt.(df.dR2)
-    df.corrected_dR2 = abs2.(df.corrected_dX) + abs2.(df.corrected_dY)
-    df.corrected_dR = sqrt.(df.corrected_dR2)
-end
-
 function preproccsing!(df::DataFrames.DataFrame)
     df[!, :dX] .= 0.0
     df[!, :dY] .= 0.0
@@ -48,35 +36,6 @@ function displacement(
     dr
 end
 
-function data2matrix(
-    df::DataFrame,
-    track_num::Integer,
-    max_length::Integer,
-    track_length::AbstractArray,
-    K::Integer,
-    start_point::AbstractArray,
-)
-    data = zeros(Float64, (max_length, K, track_num))
-    for i = 1:track_num
-        for n = 0:track_length[i]-1
-            data[n+1, :, i] .= df.dR[start_point[i]+n]
-        end
-    end
-    data
-end
-
-function dr2matrix(df, id, data, frame)
-    N = maximum(df[!, id])
-    dr = Matrix{Union{Nothing,Float64}}(nothing, maximum(df[!, frame]), N)
-    @inbounds for n = 1:N
-        m = filter(!isnan, df[df[!, id] .== n, data])
-        @simd for t = 1:length(m)
-            dr[t, n] = m[t]
-        end
-    end
-    dr
-end
-
 function xy2matrix(df, id, x, y, frame)
     N = maximum(df[!, id])
     xy = Array{Union{Nothing,Float64}}(nothing, maximum(df[!, frame]), 2, N + 1 - minimum(df[!, id]))
@@ -89,21 +48,6 @@ function xy2matrix(df, id, x, y, frame)
         end
     end
     xy
-end
-
-function create_prior(df::DataFrames.DataFrame, K::Integer, dt::Float64, er::Float64)
-    a::Array{Float64,1} = rand(Float64, K)
-    a /= sum(a)
-    A::Array{Float64,2} = rand(Float64, (K, K))
-    @inbounds for i = 1:K
-        A[i, :] /= sum(A[i, :])
-    end
-    R = kmeans(filter(!isnan, abs2.(df.dR))', K, tol = 1e-6; maxiter = 10000)
-    D = R.centers # get the cluster centers
-    D /= 4dt
-    D .- abs2(er) / dt
-    D = reverse(sort(Array{Float64,1}(D[:])))
-    return a, A, D
 end
 
 nomapround(b, d) = (x -> round.(x, digits = d)).(b)

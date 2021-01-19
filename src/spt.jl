@@ -16,6 +16,7 @@ using HypergeometricFunctions
 using Random
 using QHull
 using DataFramesMeta
+using Base.Threads
 
 
 import Random: AbstractRNG, GLOBAL_RNG
