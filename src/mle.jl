@@ -4,8 +4,9 @@ function fit_baumwelch(
     tol = 1e-2,
     maxiter = 2000,
     dt::Float64 = 0.022,
-    er::Float64 = 0.03
-    )
+    er::Float64 = 0.03,
+    idlabel, datalabel, framelabel, xlabel, ylabel
+)
     result = DataFrame(
         iteration = Int64[],
         loglikelihood = Float64[],
@@ -15,10 +16,10 @@ function fit_baumwelch(
         )
     @argcheck maxiter >= 0
 
-    iteration::Int = 0
+    consiteration::Int = 0
     l::Float64 = 0.0
     ϵ::Float64 = 100.0
-    track_length, track_num, max_length, start_point = preproccsing!(df)
+    add_dr!(df, idlabel = idlabel, xlabel = xlabel, ylabel = ylabel)
     observations = dr2matrix(df, idlabel, datalabel, framelabel)
     a, A, D = create_prior(df, K, dt, er)
 
@@ -48,9 +49,9 @@ function fit_baumwelch(
             update_ξ!(ξ, α, β, c, A, L, n, track_length)
         end
         a = sum(γ[1, :, :], dims=2)[:, 1] ./ sum(γ[1, :, :])
-        D = reshape(
+        D = abs2.(reshape(
             sum(abs2.(observations) .* γ , dims=(1,3)) ./ (sum(γ, dims=(1,3)) .* (4dt)),
-            K) .- er^2/dt
+            K) .- er^2/dt)
         # if any(x -> x <= 0, D)
         #     # println("D <= 0")
         #     for j in 1:K
@@ -63,7 +64,6 @@ function fit_baumwelch(
         #         end
         #     end
         # end
-        @show D
         A = reshape(sum(ξ, dims=(1, 4)), K,K) ./ sum(reshape(sum(ξ, dims=(1, 4)), K,K), dims=2)
         l = sum(filter(!isinf, log.(c)))
 

@@ -146,3 +146,23 @@ end
 function remove_nothing(x::AbstractArray)
     x[.!any.(isnothing, eachrow(x)), :]
 end
+
+# function frameaverage(data; L = 2)
+#     new_data = zero(size(data))
+#     @inbounds for t = 1:L-1
+#         new_data[t, ]
+#     @inbounds for t = 1:size(data, 1)
+
+# end
+
+# function displacement(r::AbstractMatrix, δ::Int)
+#     sqrt((r[1+δ, 2] - r[1, 2])^2 + (r[1+δ, 1] - r[1, 1])^2)
+# end
+
+# function displacement(r::AbstractMatrix, t::Int, δ::Int)
+#     sqrt((r[t+δ, 2] - r[t, 2])^2 + (r[t+δ, 1] - r[t, 1])^2)
+# end
+
+# function squared_displacement(r::AbstractMatrix, t::Int, δ::Int)
+#     displacement(r, t, δ)^2
+# end
