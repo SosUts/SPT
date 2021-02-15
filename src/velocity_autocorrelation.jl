@@ -11,7 +11,7 @@ function vacf(
 )
     result = DataFrame(n = Int[], τ = Int[], value = Float64[])
     @inbounds for n = 1:maximum(df[!, id])
-        data = extract(df, n, id, x, y)
+        data = extract(df, n, id, [x, y])
         T = size(data, 1)
         T < max_τ ? maxt = T : maxt = max_τ
         @inbounds for τ = 0:maxt-δt-1

@@ -87,6 +87,7 @@ export
 include("displacement.jl")
 include("angle.jl")
 include("mle.jl")
+include("mle_init.jl")
 include("msd.jl")
 include("ctrw.jl")
 include("messages.jl")

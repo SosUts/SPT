@@ -18,17 +18,32 @@ function preproccsing!(df::DataFrames.DataFrame)
     return track_length, track_num, max_length, start_point
 end
 
+function chi(
+    df;
+    idlabel = :TrackID,
+    datalabel = :POSITION_X,
+    δ::Int = 1
+)
+    dx = Float64[]
+    @inbounds for n = sort(collect(Set(df[!, idlabel])))
+        m = extract(df, n, idlabel, [datalabel])
+        @simd for t = 1:size(m, 1)-δ
+            append!(dx, m[t+δ] - m[t])
+        end
+    end
+    dx
+end
+
 function displacement(
-    df::DataFrame,
-    id::Symbol = :TrackID,
-    x::Symbol = :POSITION_X,
-    y::Symbol = :POSITION_Y;
-    δ::Int = 1,
+    df;
+    idlabel = :TrackID,
+    xlabel = :POSITION_X,
+    ylabel = :POSITION_Y,
+    δ::Int = 1
 )
     dr = Float64[]
-    @inbounds for n = 1:maximum(df[!, id])
-        m = extract(df, n, id, [x, y])
-        # m = Matrix(df[df[!, id].==n, [xlabel, ylabel]])
+    @inbounds for n = sort(collect(Set(df[!, idlabel])))
+        m = extract(df, n, idlabel, [xlabel, ylabel])
         @simd for t = 1:size(m, 1)-δ
             append!(dr, displacement(m, t, δ))
         end
