@@ -20,50 +20,40 @@ function fit_baumwelch(
     l::Float64 = 0.0
     ϵ::Float64 = 100.0
     add_dr!(df, idlabel = idlabel, xlabel = xlabel, ylabel = ylabel)
+    remove_zero!(df, datalabel = datalabel)
     observations = dr2matrix(df, idlabel, datalabel, framelabel)
-    a, A, D = create_prior(df, K, dt, er)
+    a, A, D = create_prior(observations, K, dt)
 
+    T, N = size(observations)
     c = Matrix{Union{Nothing, Float64}}(undef, T, N)
     α = Array{Union{Nothing, Float64}}(undef, T, K, N)
     β = Array{Union{Nothing, Float64}}(undef, T, K, N)
     γ = Array{Union{Nothing, Float64}}(undef, T, K, N)
     ξ = Array{Union{Nothing, Float64}}(undef, T, K, K, N)
-    LL = Array{Union{Nothing, Float64}}(undef, T, K, N)
+    L = Array{Union{Nothing, Float64}}(undef, T, K, N)
 
     while ϵ > tol
         pl = l
-        fill!(α, nothing)
-        fill!(β, nothing)
-        fill!(γ, nothing)
-        fill!(ξ, nothing)
-        fill!(c, nothing)
-        fill!(L, nothing)
+        fill!(α, 0.0)
+        fill!(β, 0.0)
+        fill!(γ, 0.0)
+        fill!(ξ, 0.0)
+        fill!(c, 0.0)
+        fill!(L, 0.0)
 
         d = Diffusion.(D, dt, er)
-        loglikelihoods!(L, observations, d)
+        loglikelihood!(observations, L, d)
 
         @inbounds for n in 1:N
             forward!(α, c, a, A, L, n)
-            backward!(β, c, A, L, n, track_length)
-            posterior!(γ, α, β, L ,n, track_length)
-            update_ξ!(ξ, α, β, c, A, L, n, track_length)
+            backward!(β, c, A, L, n)
+            posterior!(γ, α, β, L ,n)
+            update_ξ!(ξ, α, β, c, A, L, n)
         end
         a = sum(γ[1, :, :], dims=2)[:, 1] ./ sum(γ[1, :, :])
-        D = abs2.(reshape(
+        D = reshape(
             sum(abs2.(observations) .* γ , dims=(1,3)) ./ (sum(γ, dims=(1,3)) .* (4dt)),
-            K) .- er^2/dt)
-        # if any(x -> x <= 0, D)
-        #     # println("D <= 0")
-        #     for j in 1:K
-        #         if D[j] <= 0
-        #             D[j] = 1e-5
-        # #             D[j] =
-        # #             example_mle(
-        # #                 observations, track_length, track_num, γ, dt, er, j
-        # #                 )
-        #         end
-        #     end
-        # end
+            K) .- er^2/dt
         A = reshape(sum(ξ, dims=(1, 4)), K,K) ./ sum(reshape(sum(ξ, dims=(1, 4)), K,K), dims=2)
         l = sum(filter(!isinf, log.(c)))
 
@@ -92,6 +82,10 @@ function fit_baumwelch(
         println("EM DID NOT converged in $iteration loops, ϵ = $ϵ")
     end
     return result
+end
+
+function remove_zero!(df; datalabel)
+    df[df[!, datalabel] .== 0.0, datalabel] .+= eps()
 end
 
 # function _objective(

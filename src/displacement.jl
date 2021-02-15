@@ -53,7 +53,7 @@ function Distributions.suffstats(
     for i = 1:n
         @inbounds r += x[i]^2
     end
-    DiffusionStats(r, Float64(n), 0.01, 0.0)
+    DiffusionStats(r, Float64(n), 0.001, 0.0)
 end
 
 function Distributions.suffstats(d::Diffusion, x::AbstractArray)
@@ -78,7 +78,7 @@ function Distributions.suffstats(::Type{<:Diffusion}, x::AbstractArray{T}, w::Ab
         r += wi * xi^2
         tw += wi
     end
-    DiffusionStats(r, tw, 0.01, 0.0)
+    DiffusionStats(r, tw, 0.001, 0.0)
 end
 
 function Distributions.fit_mle(::Type{<:Diffusion}, ss::DiffusionStats)
