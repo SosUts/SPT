@@ -62,10 +62,11 @@ function ensemble_tamsd(df::DataFrame)
         n = Int64[],
         std = Float64[],
         sem = Float64[],
+        ci = Float64[],
     )
     @inbounds Threads.@threads for i = 1:maximum(df.delta_t)
         data = df[df.delta_t.==i, :]
-        push!(eatamsd, [i, mean(data.msd), sum(data.n), std(data.msd), sem(data.msd)])
+        push!(eatamsd, [i, mean(data.msd), sum(data.n), std(data.msd), sem(data.msd), 1.96*sem(data.msd)])
     end
     eatamsd
 end
