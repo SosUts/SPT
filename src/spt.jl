@@ -37,8 +37,8 @@ export
     suffstats,
     fit_mle,
     # msd.jl
-    mean_square_disaplcement,
-    plot_msd,
+    # mean_square_disaplcement,
+    # plot_msd,
     # messages.jl
     forward!,
     backward!,
@@ -72,10 +72,10 @@ export
     # gyration.jl
     gyration,
     # mme.jl
-    mme,
-    moment,
-    displacement,
-    squared_displacement,
+    # mme,
+    # moment,
+    # displacement,
+    # squared_displacement,
     # ergodicity_test.jl
     dynamical_functional,
     ergodicity_estimator,
@@ -88,10 +88,10 @@ include("displacement.jl")
 include("angle.jl")
 include("mle.jl")
 include("mle_init.jl")
-include("msd.jl")
+# include("msd.jl")
 include("ctrw.jl")
 include("messages.jl")
-include("mme.jl")
+# include("mme.jl")
 include("viterbi.jl")
 include("likelihoods.jl")
 include("utilities.jl")
